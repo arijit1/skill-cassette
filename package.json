@@ -1,0 +1,37 @@
+{
+  "name": "ctx-router",
+  "version": "0.1.0",
+  "description": "Local-first agent context router that loads the right skills and memory before an agent runs.",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "bin": {
+    "ctx": "./bin/ctx.js",
+    "ctx-router": "./bin/ctx.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "skills/",
+    "memory/",
+    "examples/",
+    "README.md",
+    ".ctx-router.json",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "test": "node --test",
+    "start": "node bin/ctx.js preflight --from-git"
+  },
+  "keywords": [
+    "agent",
+    "context",
+    "cli",
+    "skills",
+    "memory",
+    "preflight"
+  ],
+  "license": "MIT"
+}

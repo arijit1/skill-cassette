@@ -1,0 +1,18 @@
+{
+  "id": "repo-code-conventions",
+  "title": "Repo Code Conventions",
+  "summary": "Prefer small, read-only preflight changes first; add tests and keep interfaces explicit.",
+  "scope": [
+    "src/**",
+    "tests/**",
+    "packages/**",
+    "bin/**"
+  ],
+  "tags": [
+    "code",
+    "tests",
+    "review"
+  ],
+  "source": "human_correction",
+  "priority": 0.85
+}

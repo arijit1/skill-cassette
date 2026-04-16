@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "mode": "recommend",
+  "read_only": true,
+  "paths": {
+    "skills": "./skills",
+    "memory": "./memory",
+    "docs": [
+      "README.md",
+      "docs/**"
+    ]
+  },
+  "routing": {
+    "max_skills": 3,
+    "max_memory_cards": 5,
+    "confidence_threshold": 0.6,
+    "require_explain": true
+  },
+  "signals": {
+    "use_git_diff": true,
+    "use_branch_name": true,
+    "use_changed_files": true,
+    "use_task_text": true
+  },
+  "artifact_detection": {
+    "code_extensions": [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".go",
+      ".py"
+    ],
+    "docs_extensions": [
+      ".md",
+      ".markdown",
+      ".rst"
+    ]
+  },
+  "policy": {
+    "allow_write_actions": false,
+    "auto_attach": false,
+    "recommend_only": true,
+    "redact_secrets": true
+  },
+  "output": {
+    "format": "human",
+    "include_trace": true,
+    "include_warnings": true
+  }
+}

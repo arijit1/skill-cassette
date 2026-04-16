@@ -1,0 +1,34 @@
+{
+  "id": "code-preflight",
+  "name": "Code Preflight",
+  "version": "1.0.0",
+  "scope": [
+    "src/**",
+    "packages/**",
+    "bin/**",
+    "tests/**"
+  ],
+  "triggers": [
+    {
+      "file_glob": [
+        "src/**",
+        "packages/**",
+        "bin/**",
+        "tests/**"
+      ],
+      "task_types": [
+        "code_change",
+        "refactor",
+        "review"
+      ]
+    }
+  ],
+  "description": "Code review and preflight rules for safe agent changes.",
+  "instructions_path": "skills/code-preflight/instructions.md",
+  "tags": [
+    "code",
+    "review",
+    "preflight",
+    "tests"
+  ]
+}

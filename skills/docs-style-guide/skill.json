@@ -1,0 +1,31 @@
+{
+  "id": "docs-style-guide",
+  "name": "Docs Style Guide",
+  "version": "1.0.0",
+  "scope": [
+    "README.md",
+    "docs/**",
+    "*.md"
+  ],
+  "triggers": [
+    {
+      "file_glob": [
+        "README.md",
+        "docs/**",
+        "*.md"
+      ],
+      "task_types": [
+        "docs_update",
+        "docs_review"
+      ]
+    }
+  ],
+  "description": "Repo writing, examples, tone, and formatting rules for docs work.",
+  "instructions_path": "skills/docs-style-guide/instructions.md",
+  "tags": [
+    "docs",
+    "markdown",
+    "examples",
+    "style"
+  ]
+}

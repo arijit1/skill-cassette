@@ -1,0 +1,18 @@
+{
+  "id": "repo-writing-conventions",
+  "title": "Repo Writing Conventions",
+  "summary": "Use short headings, executable examples, and explicit next steps. Keep README copy direct.",
+  "scope": [
+    "README.md",
+    "docs/**",
+    "examples/**"
+  ],
+  "tags": [
+    "docs",
+    "writing",
+    "README",
+    "examples"
+  ],
+  "source": "human_correction",
+  "priority": 0.9
+}
