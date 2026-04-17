@@ -70,8 +70,8 @@ test('ctx init runs guided discovery and suggests the next bridge command', () =
     assert.match(result.stdout, /health:/i);
     assert.match(result.stdout, /discovery:/i);
     assert.match(result.stdout, /next:/i);
-    assert.match(result.stdout, /ctx handoff --backend/i);
-    assert.match(result.stdout, /agent-bridge\.mjs --handoff-file/i);
+    assert.match(result.stdout, /ctx handoff --backend codex --json/i);
+    assert.match(result.stdout, /agent-bridge\.mjs --backend codex --handoff-file/i);
     assert.match(result.stdout, /saved handoff file/i);
   });
 });

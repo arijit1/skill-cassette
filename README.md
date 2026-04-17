@@ -17,7 +17,7 @@ It ships with:
 
 ## Quickstart
 
-Start here if you want the fastest path from a fresh repo to a backend-ready handoff:
+Start here if you want the fastest path from a fresh repo to a Codex-ready handoff:
 
 1. Initialize the repo-local scaffold.
 2. Generate a saved handoff file for your backend.
@@ -26,9 +26,9 @@ Start here if you want the fastest path from a fresh repo to a backend-ready han
 
 ```bash
 ctx init
-ctx handoff --backend ollama --model llama3 --json
+ctx handoff --backend codex --json
 code .skill-cassette/handoff.json
-node examples/wrappers/agent-bridge.mjs --handoff-file .skill-cassette/handoff.json
+node examples/wrappers/agent-bridge.mjs --backend codex --handoff-file .skill-cassette/handoff.json
 ```
 
 If you want the `ctx` command in your shell while developing locally:
@@ -37,7 +37,7 @@ If you want the `ctx` command in your shell while developing locally:
 npm link
 ```
 
-`ctx init` creates `skills/`, `memory/`, config, and a starter GitHub Action in another repo. It also prints the saved handoff path so you know exactly what the bridge will use next.
+`ctx init` creates `skills/`, `memory/`, config, and a starter GitHub Action in another repo. It also runs a quick `doctor` and `scan`, then prints the Codex command and saved handoff path so you know exactly what to do next.
 
 Why the saved file exists: it gives you one place to inspect or tweak the handoff before a backend runs.
 
@@ -108,7 +108,7 @@ Use the handoff command when you want the prompt shaped for a specific backend:
 node bin/ctx.js handoff --backend claude --json
 ```
 
-`ctx handoff --json` also writes an editable handoff file at `.skill-cassette/handoff.json` by default. That file is what the bridge example reads when you want to review or tweak the context before execution.
+`ctx handoff --backend codex --json` also writes an editable handoff file at `.skill-cassette/handoff.json` by default. That file is what the bridge example reads when you want to review or tweak the context before execution.
 
 ## Sample Bridge
 
@@ -128,7 +128,7 @@ The bridge:
 If you want to reuse the saved handoff file directly:
 
 ```bash
-node examples/wrappers/agent-bridge.mjs --handoff-file .skill-cassette/handoff.json
+node examples/wrappers/agent-bridge.mjs --backend codex --handoff-file .skill-cassette/handoff.json
 ```
 
 ## Example skill set

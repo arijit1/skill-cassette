@@ -272,17 +272,13 @@ function saveHandoffFile(filePath, handoff) {
   fs.writeFileSync(filePath, `${JSON.stringify(handoff, null, 2)}\n`);
 }
 
-function buildBridgeCommand(repoRoot, handoffFilePath) {
+function buildBridgeCommand(repoRoot, handoffFilePath, backendId = 'codex') {
   const relativeHandoffFile = path.relative(repoRoot, handoffFilePath) || handoffFilePath;
-  return `node examples/wrappers/agent-bridge.mjs --handoff-file ${JSON.stringify(relativeHandoffFile)}`;
+  return `node examples/wrappers/agent-bridge.mjs --backend ${backendId} --handoff-file ${JSON.stringify(relativeHandoffFile)}`;
 }
 
 function buildInitGuide({ repoRoot, handoffFilePath, doctorReport, scanReport, backendSelection }) {
-  const modelSegment = backendSelection.model
-    ? `--model ${backendSelection.model} `
-    : backendSelection.resolved === 'ollama'
-      ? '--model <name> '
-      : '';
+  const backendId = backendSelection?.resolved || 'codex';
   const lines = [];
 
   lines.push('skill-cassette init');
@@ -314,8 +310,8 @@ function buildInitGuide({ repoRoot, handoffFilePath, doctorReport, scanReport, b
 
   lines.push('');
   lines.push('next:');
-  lines.push(`1. ctx handoff --backend ${backendSelection.resolved} ${modelSegment}--json`);
-  lines.push(`2. ${buildBridgeCommand(repoRoot, handoffFilePath)}`);
+  lines.push(`1. ctx handoff --backend ${backendId} --json`);
+  lines.push(`2. ${buildBridgeCommand(repoRoot, handoffFilePath, backendId)}`);
   lines.push('');
   lines.push(`saved handoff file: ${path.relative(repoRoot, handoffFilePath)}`);
 
@@ -406,7 +402,7 @@ async function runInit(flags, io = {}) {
   }
 
   const config = loadConfig(workingDir);
-  const backendSelection = resolveBackendSelection(config.backend?.default, config, {
+  const backendSelection = resolveBackendSelection('codex', config, {
     model: config.backend?.model
   });
   const handoffFilePath = resolveHandoffFilePath(workingDir, flags);
