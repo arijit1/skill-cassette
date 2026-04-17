@@ -316,6 +316,7 @@ main();
 `;
 
 function buildScaffoldEntries(options = {}) {
+  const bridgeTemplatePath = path.join(__dirname, '..', 'examples', 'wrappers', 'agent-bridge.mjs');
   const entries = [
     {
       relativePath: '.skill-cassette.json',
@@ -327,7 +328,7 @@ function buildScaffoldEntries(options = {}) {
     },
     {
       relativePath: '.skill-cassette/agent-bridge.mjs',
-      contents: `${AGENT_BRIDGE_SCRIPT}\n`
+      contents: `${fs.readFileSync(bridgeTemplatePath, 'utf8')}\n`
     },
     {
       relativePath: 'skills/docs-style-guide/skill.json',

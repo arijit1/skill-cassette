@@ -2,6 +2,7 @@
 
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import readline from 'node:readline';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -116,6 +117,57 @@ function resolveHandoffFilePath(flags) {
   return path.resolve(flags.cwd || process.cwd(), input);
 }
 
+function isInteractive() {
+  return Boolean(process.stdin.isTTY && process.stdout.isTTY);
+}
+
+function promptYesNo(question) {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(String(answer || '').trim().toLowerCase().startsWith('y'));
+    });
+  });
+}
+
+function promptEnter(question) {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    rl.question(question, () => {
+      rl.close();
+      resolve();
+    });
+  });
+}
+
+function buildLaunchCommand(handoff, handoffFilePath) {
+  if (handoff?.backend?.id === 'codex' || handoff?.backend?.id === 'claude') {
+    return {
+      program: handoff.backend.id,
+      args: ['--handoff-file', handoffFilePath]
+    };
+  }
+
+  if (handoff?.backend?.id === 'ollama' && handoff?.execution?.command?.program) {
+    return handoff.execution.command;
+  }
+
+  if (handoff?.execution?.command?.program) {
+    return handoff.execution.command;
+  }
+
+  return null;
+}
+
 function printUsage() {
   const displayName = resolveBridgeDisplayName();
 
@@ -128,8 +180,9 @@ function printUsage() {
     'Notes:',
     '  - Install or link skill-cassette so the ctx command is available.',
     '  - Use --handoff-file to reuse an editable saved JSON context.',
-    '  - Ollama executes directly when skill-cassette produces execution.command.',
-    '  - Claude and Codex return messages for your SDK wrapper.'
+    '  - Bridge helper is optional/internal sample code; use it only as a reference wrapper.',
+    '  - Codex and Claude launch directly from the saved handoff file.',
+    '  - Ollama executes directly when skill-cassette produces execution.command.'
   ].join('\n'));
   process.stdout.write('\n');
 }
@@ -176,7 +229,22 @@ function executeOllama(handoff) {
   }
 }
 
-function main() {
+async function maybePauseForEdit(handoffFilePath) {
+  if (!isInteractive()) {
+    return;
+  }
+
+  const shouldEdit = await promptYesNo('Edit the JSON before continuing? [y/N] ');
+
+  if (!shouldEdit) {
+    return;
+  }
+
+  process.stdout.write(`Edit this file now:\n  ${handoffFilePath}\n`);
+  await promptEnter('Press Enter when you are ready to continue with Codex...');
+}
+
+async function main() {
   const flags = parseArgs(process.argv.slice(2));
 
   if (flags.help || flags.h) {
@@ -185,10 +253,11 @@ function main() {
   }
 
   let handoff;
+  let handoffFilePath = null;
 
   try {
     if (flags.handoff_file) {
-      const handoffFilePath = resolveHandoffFilePath(flags);
+      handoffFilePath = resolveHandoffFilePath(flags);
       handoff = JSON.parse(fs.readFileSync(handoffFilePath, 'utf8'));
     } else {
       const ctxBin = resolveCtxBin(flags);
@@ -223,6 +292,30 @@ function main() {
     return;
   }
 
+  if (handoffFilePath) {
+    await maybePauseForEdit(handoffFilePath);
+  }
+
+  const launchCommand = handoffFilePath ? buildLaunchCommand(handoff, handoffFilePath) : null;
+
+  if (launchCommand?.program) {
+    const result = runCommand(launchCommand.program, launchCommand.args || [], {
+      stdio: 'inherit'
+    });
+
+    if (result.error) {
+      process.stderr.write(String(result.error.message) + '\n');
+      process.exitCode = 1;
+      return;
+    }
+
+    if (typeof result.status === 'number') {
+      process.exitCode = result.status;
+    }
+
+    return;
+  }
+
   if (handoff.backend && handoff.backend.id === 'ollama' && handoff.execution && handoff.execution.command) {
     executeOllama(handoff);
     return;
@@ -231,4 +324,7 @@ function main() {
   printBridge(handoff);
 }
 
-main();
+main().catch((error) => {
+  process.stderr.write(String(error && error.stack ? error.stack : error) + '\n');
+  process.exitCode = 1;
+});

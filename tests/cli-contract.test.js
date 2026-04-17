@@ -72,9 +72,10 @@ cliTest('ctx handoff --json returns a backend-specific envelope', () => {
   assert.ok(Array.isArray(payload.execution.messages));
   assert.equal(payload.execution.messages[0].role, 'system');
   assert.ok(typeof payload.handoff_file === 'string');
-  assert.match(result.stderr, /Next step: run this workspace-local command in your repo/i);
-  assert.match(result.stderr, /workspace runner: node \.skill-cassette\/agent-bridge\.mjs --handoff-file/i);
-  assert.match(result.stderr, /repo bridge sample in examples\/ is optional\/internal sample code/i);
+  assert.match(result.stderr, /Next step: run this backend command in your workspace/i);
+  assert.match(result.stderr, /backend command: claude --handoff-file/i);
+  assert.match(result.stderr, /saved handoff file:/i);
+  assert.match(result.stderr, /bridge helper is optional\/internal sample code/i);
 });
 
 cliTest('ctx handoff --json writes an editable handoff file', () => {

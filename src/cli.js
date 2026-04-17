@@ -272,19 +272,28 @@ function saveHandoffFile(filePath, handoff) {
   fs.writeFileSync(filePath, `${JSON.stringify(handoff, null, 2)}\n`);
 }
 
-function buildWorkspaceRunnerCommand(repoRoot, handoffFilePath) {
+function buildBackendCommand(repoRoot, handoffFilePath, backendId = 'codex') {
   const relativeHandoffFile = path.relative(repoRoot, handoffFilePath) || handoffFilePath;
   const quotedHandoffFile = JSON.stringify(relativeHandoffFile);
-  return `node .skill-cassette/agent-bridge.mjs --handoff-file ${quotedHandoffFile}`;
+
+  if (backendId === 'codex' || backendId === 'claude') {
+    return `${backendId} --handoff-file ${quotedHandoffFile}`;
+  }
+
+  if (backendId === 'ollama') {
+    return `node .skill-cassette/agent-bridge.mjs --handoff-file ${quotedHandoffFile}`;
+  }
+
+  return `${backendId} --handoff-file ${quotedHandoffFile}`;
 }
 
-function printHandoffNextStep(stream, repoRoot, handoffFilePath) {
+function printHandoffNextStep(stream, repoRoot, handoffFilePath, backendId = 'codex') {
   const relativeHandoffFile = path.relative(repoRoot, handoffFilePath) || handoffFilePath;
 
-  stream.write('Next step: run this workspace-local command in your repo:\n');
-  stream.write(`workspace runner: ${buildWorkspaceRunnerCommand(repoRoot, handoffFilePath)}\n`);
+  stream.write('Next step: run this backend command in your workspace:\n');
+  stream.write(`backend command: ${buildBackendCommand(repoRoot, handoffFilePath, backendId)}\n`);
   stream.write(`saved handoff file: ${relativeHandoffFile}\n`);
-  stream.write('repo bridge sample in examples/ is optional/internal sample code; use it only as a reference.\n');
+  stream.write('bridge helper is optional/internal sample code; use it only if you want a reference wrapper in your own repo.\n');
 }
 
 function buildInitGuide({ repoRoot, handoffFilePath, doctorReport, scanReport, backendSelection }) {
@@ -321,8 +330,8 @@ function buildInitGuide({ repoRoot, handoffFilePath, doctorReport, scanReport, b
   lines.push('');
   lines.push('next:');
   lines.push(`1. ctx handoff --backend ${backendId} --json`);
-  lines.push('2. edit .skill-cassette/handoff.json');
-  lines.push(`3. ${buildWorkspaceRunnerCommand(repoRoot, handoffFilePath)}`);
+  lines.push('2. edit .skill-cassette/handoff.json if you want to review it');
+  lines.push(`3. backend command: ${buildBackendCommand(repoRoot, handoffFilePath, backendId)}`);
   lines.push('');
   lines.push(`saved handoff file: ${path.relative(repoRoot, handoffFilePath)}`);
 
@@ -563,14 +572,14 @@ async function runHandoff(flags, stdout) {
 
   if (flags.json) {
     jsonOutput(stdout, handoffForDisk);
-    printHandoffNextStep(process.stderr, state.repoRoot, handoffFilePath);
+    printHandoffNextStep(process.stderr, state.repoRoot, handoffFilePath, selection.resolved);
     return;
   }
 
   stdout.write(renderBackendBundle(handoffForDisk));
   stdout.write(`\nsaved handoff file: ${path.relative(state.repoRoot, handoffFilePath)}\n`);
-  stdout.write(`workspace runner: ${buildWorkspaceRunnerCommand(state.repoRoot, handoffFilePath)}\n`);
-  stdout.write('repo bridge sample in examples/ is optional/internal sample code; use it only as a reference.\n');
+  stdout.write(`backend command: ${buildBackendCommand(state.repoRoot, handoffFilePath, selection.resolved)}\n`);
+  stdout.write('bridge helper is optional/internal sample code; use it only if you want a reference wrapper in your own repo.\n');
 }
 
 async function main(argv = process.argv.slice(2), io = {}) {

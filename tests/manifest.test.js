@@ -73,13 +73,13 @@ test('instruction files are present and non-empty', () => {
 test('README makes the workspace runner obvious and keeps the repo sample secondary', () => {
   const readme = readText('README.md');
 
-  assert.match(readme, /\.skill-cassette\/agent-bridge\.mjs/i);
-  assert.match(readme, /workspace-local runner/i);
-  assert.match(readme, /bridge sample in .*examples\/wrappers\/agent-bridge\.mjs.*optional\/internal sample code/i);
-  assert.match(readme, /Workspace Runner/i);
+  assert.match(readme, /backend command/i);
+  assert.match(readme, /bridge helper is optional\/internal sample code/i);
+  assert.match(readme, /codex --handoff-file/i);
+  assert.match(readme, /Quickstart/i);
 });
 
-test('sample backend bridge wrapper is present and documented', () => {
+test('sample backend bridge wrapper is present and prompts for review', () => {
   const bridge = readText('examples/wrappers/agent-bridge.mjs');
 
   assert.ok(bridge.length > 200);
@@ -87,6 +87,8 @@ test('sample backend bridge wrapper is present and documented', () => {
   assert.match(bridge, /handoff-file/);
   assert.match(bridge, /execution\.command/);
   assert.match(bridge, /ollama/i);
+  assert.match(bridge, /Edit the JSON before continuing\?/i);
+  assert.match(bridge, /Press Enter when you are ready to continue with Codex/i);
 });
 
 test('demo config matches the planned v0 contract', () => {
