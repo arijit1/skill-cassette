@@ -70,6 +70,15 @@ test('instruction files are present and non-empty', () => {
   assert.match(codeInstructions, /tests/i);
 });
 
+test('sample backend bridge wrapper is present and documented', () => {
+  const bridge = readText('examples/wrappers/agent-bridge.mjs');
+
+  assert.ok(bridge.length > 200);
+  assert.match(bridge, /handoff.*--json/);
+  assert.match(bridge, /execution\.command/);
+  assert.match(bridge, /ollama/i);
+});
+
 test('demo config matches the planned v0 contract', () => {
   const config = readJson('examples/skill-cassette.config.example.json');
 

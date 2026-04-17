@@ -96,3 +96,28 @@ test('backend envelope shapes a portable handoff payload', () => {
   assert.equal(handoff.execution.messages[1].role, 'user');
   assert.match(handoff.execution.launch_hint, /Ollama/i);
 });
+
+test('ollama handoff includes an executable command when a model is configured', () => {
+  const bundle = createBundle();
+  const selection = resolveBackendSelection('ollama', {
+    backend: {
+      preferred: ['ollama', 'claude', 'codex'],
+      models: {
+        ollama: 'llama3'
+      }
+    }
+  });
+  const handoff = buildBackendEnvelope(bundle, selection, {
+    backend: {
+      preferred: ['ollama', 'claude', 'codex'],
+      models: {
+        ollama: 'llama3'
+      }
+    }
+  });
+
+  assert.equal(handoff.execution.mode, 'cli');
+  assert.equal(handoff.execution.command.program, 'ollama');
+  assert.deepEqual(handoff.execution.command.args.slice(0, 2), ['run', 'llama3']);
+  assert.equal(handoff.execution.command.args[2], handoff.execution.prompt_text);
+});

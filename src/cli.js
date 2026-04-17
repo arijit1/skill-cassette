@@ -1,4 +1,5 @@
 const fs = require('fs');
+const readline = require('readline');
 const path = require('path');
 const { discoverRegistry } = require('./registry');
 const { composeBundle, renderHumanBundle } = require('./composer');
@@ -6,7 +7,7 @@ const { buildBackendEnvelope, renderBackendBundle, resolveBackendSelection } = r
 const { findRepoRoot, getGitSnapshot, maybeResolveGitRepo } = require('./git');
 const { loadConfig } = require('./config');
 const { detectArtifactTypes, routeContext } = require('./router');
-const { scaffoldRepo } = require('./scaffold');
+const { hasExistingScaffold, scaffoldRepo } = require('./scaffold');
 
 function parseArgs(argv) {
   const args = [...argv];
@@ -93,6 +94,8 @@ function printUsage(stdout) {
     '  --cwd             Base directory to run from',
     '  --backend         Backend adapter to target (ollama, claude, codex, generic)',
     '  --model           Optional model name for the chosen backend',
+    '  --refresh, --overwrite  Overwrite an existing scaffold when running init',
+    '  --keep-existing         Keep the existing scaffold when running init',
     '  --explain         Show a longer decision trace',
     '  --max-skills      Override selected skills limit',
     '  --max-memory      Override selected memory limit',
@@ -106,6 +109,45 @@ function printUsage(stdout) {
     '  explain   Same as preflight, with a verbose human-readable trace'
   ].join('\n'));
   stdout.write('\n');
+}
+
+function createPrompt(stdin, stdout) {
+  const input = stdin || process.stdin;
+  const output = stdout || process.stdout;
+  return readline.createInterface({
+    input,
+    output
+  });
+}
+
+function normalizeInitChoice(answer) {
+  const value = String(answer || '').trim().toLowerCase();
+
+  if (value.startsWith('r')) {
+    return 'refresh';
+  }
+
+  if (value.startsWith('c') || value.startsWith('k')) {
+    return 'continue';
+  }
+
+  return 'continue';
+}
+
+function askInitChoice(stdin, stdout, workingDir) {
+  return new Promise((resolve) => {
+    const rl = createPrompt(stdin, stdout);
+    const prompt = [
+      `A scaffold already exists in ${workingDir}.`,
+      'Choose: [r]efresh and recreate scaffold, [c]ontinue with existing',
+      '> '
+    ].join('\n');
+
+    rl.question(prompt, (answer) => {
+      rl.close();
+      resolve(normalizeInitChoice(answer));
+    });
+  });
 }
 
 function resolveWorkingDir(flags) {
@@ -225,21 +267,52 @@ function humanDoctor(stdout, checks) {
   }
 }
 
-async function runInit(flags, stdout) {
+async function runInit(flags, io = {}) {
+  const stdout = io.stdout || process.stdout;
+  const stdin = io.stdin || process.stdin;
   const workingDir = resolveWorkingDir(flags);
+  const includeGithubAction = flags.include_github_action !== false;
+  const scaffoldExists = hasExistingScaffold(workingDir, { includeGithubAction });
+  const overwriteRequested = Boolean(flags.refresh || flags.overwrite || flags.force);
+  const keepExistingRequested = Boolean(flags.keep_existing || flags.continue_existing || flags.keep || flags.continue);
+  let overwriteExisting = overwriteRequested;
+
+  if (!overwriteExisting && !keepExistingRequested && scaffoldExists) {
+    if (stdin.isTTY && stdout.isTTY) {
+      const choice = await askInitChoice(stdin, stdout, workingDir);
+      overwriteExisting = choice === 'refresh';
+    } else {
+      stdout.write(`scaffold already exists in ${workingDir}; continuing with existing files. Use --refresh to overwrite.\n`);
+    }
+  }
+
   const result = scaffoldRepo(workingDir, {
-    includeGithubAction: flags.include_github_action !== false
+    includeGithubAction,
+    overwriteExisting
   });
 
-  stdout.write(`initialized skill-cassette scaffold in ${workingDir}\n`);
+  if (overwriteExisting) {
+    stdout.write(`refreshed skill-cassette scaffold in ${workingDir}\n`);
+  } else if (scaffoldExists) {
+    stdout.write(`continued with existing skill-cassette scaffold in ${workingDir}\n`);
+  } else {
+    stdout.write(`initialized skill-cassette scaffold in ${workingDir}\n`);
+  }
+
   if (result.created.length) {
     stdout.write('created:\n');
     for (const filePath of result.created) {
       stdout.write(`- ${path.relative(workingDir, filePath)}\n`);
     }
-  } else {
-    stdout.write('nothing to create; scaffold already exists.\n');
   }
+
+  if (result.refreshed.length) {
+    stdout.write('refreshed:\n');
+    for (const filePath of result.refreshed) {
+      stdout.write(`- ${path.relative(workingDir, filePath)}\n`);
+    }
+  }
+
 }
 
 async function runScan(flags, stdout) {
@@ -375,6 +448,7 @@ async function runHandoff(flags, stdout) {
 async function main(argv = process.argv.slice(2), io = {}) {
   const stdout = io.stdout || process.stdout;
   const stderr = io.stderr || process.stderr;
+  const stdin = io.stdin || process.stdin;
   const { command, flags } = parseArgs(argv);
 
   if (command === 'help' || flags.help || flags.h) {
@@ -383,7 +457,7 @@ async function main(argv = process.argv.slice(2), io = {}) {
   }
 
   if (command === 'init') {
-    await runInit(flags, stdout);
+    await runInit(flags, { stdout, stdin });
     return;
   }
 

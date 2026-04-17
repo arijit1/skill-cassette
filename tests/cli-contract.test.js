@@ -34,6 +34,8 @@ cliTest('ctx --help exposes the release v0 command set', () => {
   assert.match(output, /\bpreflight\b/);
   assert.match(output, /\bhandoff\b/);
   assert.match(output, /\bexplain\b/);
+  assert.match(output, /refresh/);
+  assert.match(output, /keep-existing/);
 });
 
 cliTest('ctx -h exposes the same help output', () => {

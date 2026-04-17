@@ -37,6 +37,8 @@ Then scaffold `skills/`, `memory/`, config, and a starter GitHub Action in anoth
 ctx init
 ```
 
+If a scaffold already exists, `ctx init` will ask whether to refresh and recreate it or continue with the current files. Use `--refresh` to overwrite or `--keep-existing` to skip the prompt.
+
 ## v0 scope
 
 - Local-first, read-only recommendations
@@ -70,6 +72,7 @@ ctx init
 - `skills/`: example skills that the router can load
 - `memory/`: example memory cards for repo conventions and corrections
 - `examples/`: demo config and task inputs
+- `examples/wrappers/`: sample backend bridge scripts
 - `tests/`: manifest and CLI contract tests
 - `.github/workflows/preflight.yml`: PR preflight scaffold
 
@@ -84,11 +87,39 @@ ctx init
 
 Set `backend.default` in `.skill-cassette.json` to choose the default adapter.
 
+Example backend config:
+
+```json
+{
+  "backend": {
+    "default": "ollama",
+    "models": {
+      "ollama": "llama3"
+    }
+  }
+}
+```
+
 Use the handoff command when you want the prompt shaped for a specific backend:
 
 ```bash
 node bin/ctx.js handoff --backend claude --json
 ```
+
+## Sample Bridge
+
+If you want one runnable example that connects `skill-cassette` to a local backend, use the bridge in `examples/wrappers/agent-bridge.mjs`.
+
+```bash
+npm link
+node examples/wrappers/agent-bridge.mjs --backend ollama --model llama3 --task "Update README examples"
+```
+
+The bridge:
+- asks `ctx handoff` for the right context
+- runs Ollama when `execution.command` is available
+- leaves `execution.messages` in place for Claude or Codex SDK wrappers
+- if `ctx` is not on your `PATH`, set `SKILL_CASSETTE_CTX_BIN=/path/to/bin/ctx.js`
 
 ## Example skill set
 

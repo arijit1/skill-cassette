@@ -99,6 +99,17 @@ function resolveBackendSelection(requestedBackend, config = {}, options = {}) {
   };
 }
 
+function buildExecutionCommand(profile, model, promptText) {
+  if (profile.id !== 'ollama' || !model) {
+    return null;
+  }
+
+  return {
+    program: 'ollama',
+    args: ['run', model, promptText]
+  };
+}
+
 function buildBackendEnvelope(bundle, selection = {}, config = {}) {
   const resolved = selection.profile ? selection : resolveBackendSelection(selection.backend, config, selection);
   const profile = resolved.profile;
@@ -120,8 +131,11 @@ function buildBackendEnvelope(bundle, selection = {}, config = {}) {
   const promptText = profile.transport === 'single_prompt'
     ? [systemText, userText].filter(Boolean).join('\n\n')
     : [systemText, userText].filter(Boolean).join('\n\n');
+  const command = buildExecutionCommand(profile, resolved.model, promptText);
   const launchHint = profile.id === 'ollama'
-    ? 'Use prompt_text with an Ollama shell wrapper or local runner.'
+    ? command
+      ? 'Execution command is ready for a local wrapper or shell helper.'
+      : 'Set --model or backend.models.ollama to generate an Ollama execution command.'
     : profile.id === 'generic'
       ? 'Use prompt_text or the messages array with your wrapper.'
       : `Pass the messages array to the ${profile.name} wrapper or SDK.`;
@@ -138,10 +152,12 @@ function buildBackendEnvelope(bundle, selection = {}, config = {}) {
       model: resolved.model
     },
     execution: {
+      mode: command ? 'cli' : 'sdk',
       system_text: systemText,
       user_text: userText,
       prompt_text: promptText,
       messages,
+      command,
       launch_hint: launchHint,
       summary: {
         changed_files: summarizeFileList(bundle.task_context?.changed_files || []),
@@ -159,9 +175,14 @@ function renderBackendBundle(bundle) {
   lines.push('skill-cassette handoff');
   lines.push(`backend: ${bundle.backend.name} (${bundle.backend.id})`);
   lines.push(`transport: ${bundle.backend.transport}`);
+  lines.push(`execution mode: ${bundle.execution.mode}`);
 
   if (bundle.backend.model) {
     lines.push(`model: ${bundle.backend.model}`);
+  }
+
+  if (bundle.execution.command?.program) {
+    lines.push(`execution command: ${bundle.execution.command.program} ${bundle.execution.command.args.slice(0, 2).join(' ')} <prompt>`);
   }
 
   lines.push(`changed files: ${bundle.execution.summary.changed_files}`);
