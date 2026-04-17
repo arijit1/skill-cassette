@@ -1,12 +1,12 @@
 # skill-cassette
 
-Repo-owned handoff layer for agents that makes the next step obvious. `skill-cassette` reads task signals from the repo, the branch, and the prompt, then loads the right skill and memory before handing the bundle to Ollama, Claude, Codex, or another compatible backend.
+> Repo-owned handoff layer for agents that makes the next step obvious.
+>
+> `skill-cassette` reads task signals from the repo, the branch, and the prompt, then loads the right skill and memory before handing the bundle to Ollama, Claude, Codex, or another compatible backend.
 
-## What it is
+## At a glance
 
 `skill-cassette` is a local-first preflight layer for AI-assisted work. It is built to keep agents from forgetting repo conventions, docs style, or code review rules.
-
-It ships with:
 
 - a CLI (`ctx`)
 - repo-local skill manifests
@@ -14,6 +14,18 @@ It ships with:
 - explainable, read-only preflight output
 - backend adapters for portable handoff payloads
 - a GitHub Action scaffold for pull requests
+
+**What users get**
+
+- A saved, editable handoff artifact at `.skill-cassette/handoff.json`
+- A direct next-step prompt instead of a vague “do the thing” handoff
+- An optional/internal bridge example for repos that want a wrapper pattern
+
+**What v0 is not**
+
+- A generic memory platform
+- Persistent compaction or memory recovery
+- A Node-shaped workflow assumption for every repo type
 
 ## Quickstart
 
