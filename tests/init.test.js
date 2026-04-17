@@ -2,10 +2,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { PassThrough } = require('node:stream');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
 
 const { DEFAULT_CONFIG } = require('../src/config');
+const { runInit } = require('../src/cli');
 
 const repoRoot = path.resolve(__dirname, '..');
 const binPath = path.join(repoRoot, 'bin', 'ctx.js');
@@ -17,18 +19,18 @@ function runCtx(args, cwd) {
   });
 }
 
-function withTempRepo(fn) {
+async function withTempRepo(fn) {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-cassette-init-'));
 
   try {
-    return fn(tempRoot);
+    return await fn(tempRoot);
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
 }
 
 test('ctx init --keep-existing preserves the existing scaffold', () => {
-  withTempRepo((tempRoot) => {
+  return withTempRepo((tempRoot) => {
     let result = runCtx(['init'], tempRoot);
     assert.equal(result.status, 0, result.stderr);
 
@@ -45,7 +47,7 @@ test('ctx init --keep-existing preserves the existing scaffold', () => {
 });
 
 test('ctx init --refresh rewrites the scaffold files', () => {
-  withTempRepo((tempRoot) => {
+  return withTempRepo((tempRoot) => {
     let result = runCtx(['init'], tempRoot);
     assert.equal(result.status, 0, result.stderr);
 
@@ -63,7 +65,7 @@ test('ctx init --refresh rewrites the scaffold files', () => {
 });
 
 test('ctx init runs guided discovery and suggests the next handoff step', () => {
-  withTempRepo((tempRoot) => {
+  return withTempRepo((tempRoot) => {
     const result = runCtx(['init'], tempRoot);
 
     assert.equal(result.status, 0, result.stderr);
@@ -74,5 +76,41 @@ test('ctx init runs guided discovery and suggests the next handoff step', () => 
     assert.match(result.stdout, /backend command: codex --handoff-file/i);
     assert.match(result.stdout, /saved handoff file/i);
     assert.ok(fs.existsSync(path.join(tempRoot, '.skill-cassette', 'agent-bridge.mjs')));
+  });
+});
+
+test('ctx init can generate the handoff immediately when the user confirms', async () => {
+  await withTempRepo(async (tempRoot) => {
+    const stdin = new PassThrough();
+    const stdout = new PassThrough();
+    const stderr = new PassThrough();
+    stdin.isTTY = true;
+    stdout.isTTY = true;
+
+    let stdoutText = '';
+    let stderrText = '';
+    stdout.on('data', (chunk) => {
+      stdoutText += String(chunk);
+    });
+    stderr.on('data', (chunk) => {
+      stderrText += String(chunk);
+    });
+
+    const runPromise = runInit({ cwd: tempRoot }, { stdin, stdout, stderr });
+
+    process.nextTick(() => {
+      stdin.write('y\n');
+      stdin.end();
+    });
+
+    await runPromise;
+
+    const handoffPath = path.join(tempRoot, '.skill-cassette', 'handoff.json');
+
+    assert.ok(fs.existsSync(handoffPath), 'expected init to generate a saved handoff file');
+    assert.match(stdoutText, /Generate the handoff now with Codex\?/i);
+    assert.match(stdoutText, /ctx handoff --backend codex --json/i);
+    assert.match(stderrText, /Next step: run this backend command in your workspace/i);
+    assert.match(stderrText, /backend command: codex --handoff-file/i);
   });
 });

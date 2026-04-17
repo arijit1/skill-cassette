@@ -151,6 +151,16 @@ function askInitChoice(stdin, stdout, workingDir) {
   });
 }
 
+function askYesNoChoice(stdin, stdout, question) {
+  return new Promise((resolve) => {
+    const rl = createPrompt(stdin, stdout);
+    rl.question(`${question} [y/N] `, (answer) => {
+      rl.close();
+      resolve(String(answer || '').trim().toLowerCase().startsWith('y'));
+    });
+  });
+}
+
 function resolveWorkingDir(flags) {
   return path.resolve(flags.cwd || process.cwd());
 }
@@ -332,6 +342,7 @@ function buildInitGuide({ repoRoot, handoffFilePath, doctorReport, scanReport, b
   lines.push(`1. ctx handoff --backend ${backendId} --json`);
   lines.push('2. edit .skill-cassette/handoff.json if you want to review it');
   lines.push(`3. backend command: ${buildBackendCommand(repoRoot, handoffFilePath, backendId)}`);
+  lines.push('4. ctx init can generate the handoff now if you confirm at the prompt.');
   lines.push('');
   lines.push(`saved handoff file: ${path.relative(repoRoot, handoffFilePath)}`);
 
@@ -352,6 +363,7 @@ function humanDoctor(stdout, checks) {
 async function runInit(flags, io = {}) {
   const stdout = io.stdout || process.stdout;
   const stdin = io.stdin || process.stdin;
+  const stderr = io.stderr || process.stderr;
   const workingDir = resolveWorkingDir(flags);
   const includeGithubAction = flags.include_github_action !== false;
   const scaffoldExists = hasExistingScaffold(workingDir, { includeGithubAction });
@@ -425,6 +437,7 @@ async function runInit(flags, io = {}) {
   const backendSelection = resolveBackendSelection('codex', config, {
     model: config.backend?.model
   });
+  const backendId = backendSelection?.resolved || 'codex';
   const handoffFilePath = resolveHandoffFilePath(workingDir, flags);
 
   stdout.write('\n');
@@ -435,6 +448,19 @@ async function runInit(flags, io = {}) {
     scanReport,
     backendSelection
   }));
+
+  if (stdin.isTTY && stdout.isTTY) {
+    const shouldGenerateHandoff = await askYesNoChoice(
+      stdin,
+      stdout,
+      'Generate the handoff now with Codex?'
+    );
+
+    if (shouldGenerateHandoff) {
+      stdout.write('\n');
+      await runHandoff({ ...flags, backend: backendId, json: true }, stdout, { stderr });
+    }
+  }
 }
 
 async function runScan(flags, stdout) {
@@ -552,7 +578,8 @@ async function runExplain(flags, stdout) {
   return runPreflight({ ...flags, explain: true }, stdout);
 }
 
-async function runHandoff(flags, stdout) {
+async function runHandoff(flags, stdout, io = {}) {
+  const stderr = io.stderr || process.stderr;
   const state = buildPreflightState(flags);
   const selection = resolveBackendSelection(flags.backend, state.config, {
     model: flags.model
@@ -572,7 +599,7 @@ async function runHandoff(flags, stdout) {
 
   if (flags.json) {
     jsonOutput(stdout, handoffForDisk);
-    printHandoffNextStep(process.stderr, state.repoRoot, handoffFilePath, selection.resolved);
+    printHandoffNextStep(stderr, state.repoRoot, handoffFilePath, selection.resolved);
     return;
   }
 

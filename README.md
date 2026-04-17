@@ -23,6 +23,7 @@ Start here if you want the fastest path from a fresh repo to a workspace-local h
 2. Generate a saved handoff file for your backend.
 3. Edit `.skill-cassette/handoff.json` if you want to inspect or tweak the payload.
 4. Run the backend command printed by `ctx handoff`.
+5. When `ctx init` asks, you can also let it generate the handoff immediately.
 
 ```bash
 ctx init
