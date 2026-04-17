@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { DEFAULT_CONFIG, writeConfig } = require('./config');
+const { DEFAULT_CONFIG } = require('./config');
 
 const DOCS_SKILL_MANIFEST = {
   id: 'docs-style-guide',
@@ -72,7 +72,7 @@ const CODE_MEMORY = {
   priority: 0.85
 };
 
-const GITHUB_ACTION = `name: ctx-router preflight
+const GITHUB_ACTION = `name: skill-cassette preflight
 
 on:
   pull_request:
@@ -91,6 +91,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - run: npm install
+      - run: npm test
       - run: node bin/ctx.js preflight --from-git --json
 `;
 
@@ -113,12 +115,14 @@ function scaffoldRepo(repoRoot, options = {}) {
   const created = [];
 
   ensureDir(repoRoot);
+  ensureDir(path.join(repoRoot, 'examples'));
   ensureDir(path.join(repoRoot, 'skills', 'docs-style-guide'));
   ensureDir(path.join(repoRoot, 'skills', 'code-preflight'));
   ensureDir(path.join(repoRoot, 'memory'));
   ensureDir(path.join(repoRoot, '.github', 'workflows'));
 
-  writeIfMissing(path.join(repoRoot, '.ctx-router.json'), `${JSON.stringify(DEFAULT_CONFIG, null, 2)}\n`, created);
+  writeIfMissing(path.join(repoRoot, '.skill-cassette.json'), `${JSON.stringify(DEFAULT_CONFIG, null, 2)}\n`, created);
+  writeIfMissing(path.join(repoRoot, 'examples', 'skill-cassette.config.example.json'), `${JSON.stringify(DEFAULT_CONFIG, null, 2)}\n`, created);
   writeIfMissing(path.join(repoRoot, 'skills', 'docs-style-guide', 'skill.json'), `${JSON.stringify(DOCS_SKILL_MANIFEST, null, 2)}\n`, created);
   writeIfMissing(path.join(repoRoot, 'skills', 'docs-style-guide', 'instructions.md'), `${DOCS_SKILL_INSTRUCTIONS}\n`, created);
   writeIfMissing(path.join(repoRoot, 'skills', 'code-preflight', 'skill.json'), `${JSON.stringify(CODE_SKILL_MANIFEST, null, 2)}\n`, created);

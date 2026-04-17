@@ -64,7 +64,7 @@ function composeBundle({ repoRoot, taskContext, classification, selectedSkills, 
   const contextBlocks = [
     {
       type: 'system',
-      title: 'Context Router Guardrails',
+      title: 'Skill Cassette Guardrails',
       content: [
         'Read-only preflight.',
         'Recommend-only mode.',
@@ -113,7 +113,7 @@ function composeBundle({ repoRoot, taskContext, classification, selectedSkills, 
 function renderHumanBundle(bundle) {
   const lines = [];
 
-  lines.push('ctx-router preflight');
+  lines.push('skill-cassette preflight');
   lines.push(`task: ${bundle.task_type} (${bundle.confidence})`);
   lines.push(`mode: ${bundle.mode}`);
   lines.push(`changed files: ${bundle.meta.changed_files_preview}`);

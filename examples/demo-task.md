@@ -4,7 +4,7 @@ Update the README examples to match the current CLI contract.
 
 Expected files:
 - `README.md`
-- `examples/ctx-router.config.example.json`
+- `examples/skill-cassette.config.example.json`
 
 Expected behavior:
 - Prefer the docs-style skill for Markdown edits.

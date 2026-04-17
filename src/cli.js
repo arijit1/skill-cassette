@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { discoverRegistry } = require('./registry');
 const { composeBundle, renderHumanBundle } = require('./composer');
+const { buildBackendEnvelope, renderBackendBundle, resolveBackendSelection } = require('./backends');
 const { findRepoRoot, getGitSnapshot, maybeResolveGitRepo } = require('./git');
 const { loadConfig } = require('./config');
 const { detectArtifactTypes, routeContext } = require('./router');
@@ -43,7 +44,10 @@ function parseArgs(argv) {
         j: 'json',
         t: 'task',
         i: 'issue_file',
-        c: 'cwd'
+        c: 'cwd',
+        b: 'backend',
+        m: 'model',
+        h: 'help'
       };
       const key = shortMap[current.slice(1)];
       if (key) {
@@ -70,21 +74,25 @@ function parseArgs(argv) {
 
 function printUsage(stdout) {
   stdout.write([
-    'ctx-router',
+    'skill-cassette',
     '',
     'Usage:',
     '  ctx init [--cwd <dir>]',
     '  ctx scan [--cwd <dir>]',
     '  ctx doctor [--cwd <dir>]',
     '  ctx preflight [--task <text>] [--issue-file <file>] [--from-git] [--json] [--explain] [--cwd <dir>]',
+    '  ctx handoff [--task <text>] [--issue-file <file>] [--from-git] [--backend <name>] [--model <name>] [--json] [--cwd <dir>]',
     '  ctx explain [--task <text>] [--issue-file <file>] [--from-git] [--cwd <dir>]',
     '',
     'Options:',
+    '  -h, --help        Show this help text',
     '  --json            Output machine-readable JSON',
     '  --task            Task text to route',
     '  --issue-file      Path to a text file with task context',
     '  --from-git        Read branch and changed files from git',
     '  --cwd             Base directory to run from',
+    '  --backend         Backend adapter to target (ollama, claude, codex, generic)',
+    '  --model           Optional model name for the chosen backend',
     '  --explain         Show a longer decision trace',
     '  --max-skills      Override selected skills limit',
     '  --max-memory      Override selected memory limit',
@@ -94,6 +102,7 @@ function printUsage(stdout) {
     '  scan      List skills and memory that are available',
     '  doctor    Validate the local setup',
     '  preflight Generate a context bundle for an agent',
+    '  handoff   Shape a preflight bundle for a specific backend',
     '  explain   Same as preflight, with a verbose human-readable trace'
   ].join('\n'));
   stdout.write('\n');
@@ -176,12 +185,41 @@ function validateRegistry(registry) {
   return issues;
 }
 
+function buildPreflightState(flags) {
+  const workingDir = resolveWorkingDir(flags);
+  const repoRoot = findRepoRoot(workingDir) || workingDir;
+  const config = loadConfig(repoRoot);
+  const registry = discoverRegistry(repoRoot, config);
+  const taskContext = buildTaskContext(workingDir, config, flags);
+  const routed = routeContext(taskContext, registry, config);
+  const bundle = composeBundle({
+    repoRoot,
+    taskContext,
+    classification: routed.classification,
+    selectedSkills: routed.selectedSkills,
+    selectedMemory: routed.selectedMemory,
+    warnings: routed.warnings,
+    config,
+    trace: routed.trace
+  });
+
+  return {
+    workingDir,
+    repoRoot,
+    config,
+    registry,
+    taskContext,
+    routed,
+    bundle
+  };
+}
+
 function jsonOutput(stdout, data) {
   stdout.write(`${JSON.stringify(data, null, 2)}\n`);
 }
 
 function humanDoctor(stdout, checks) {
-  stdout.write('ctx-router doctor\n');
+  stdout.write('skill-cassette doctor\n');
   for (const check of checks) {
     stdout.write(`- ${check.ok ? 'ok' : 'warn'}: ${check.label}${check.detail ? ` - ${check.detail}` : ''}\n`);
   }
@@ -193,7 +231,7 @@ async function runInit(flags, stdout) {
     includeGithubAction: flags.include_github_action !== false
   });
 
-  stdout.write(`initialized ctx-router scaffold in ${workingDir}\n`);
+  stdout.write(`initialized skill-cassette scaffold in ${workingDir}\n`);
   if (result.created.length) {
     stdout.write('created:\n');
     for (const filePath of result.created) {
@@ -221,7 +259,7 @@ async function runScan(flags, stdout) {
     return;
   }
 
-  stdout.write('ctx-router scan\n');
+  stdout.write('skill-cassette scan\n');
   stdout.write(`repo: ${repoRoot}\n`);
   stdout.write('\nskills:\n');
   for (const skill of registry.skills) {
@@ -263,7 +301,9 @@ async function runDoctor(flags, stdout) {
   checks.push({
     label: 'config',
     ok: Boolean(config),
-    detail: path.relative(repoRoot, config.config_path || '.ctx-router.json') || '.ctx-router.json'
+    detail: config.config_exists
+      ? `file: ${path.relative(repoRoot, config.config_path || '.skill-cassette.json') || '.skill-cassette.json'}`
+      : `default: ${path.relative(repoRoot, config.config_path || '.skill-cassette.json') || '.skill-cassette.json'}`
   });
 
   checks.push({
@@ -297,22 +337,7 @@ async function runDoctor(flags, stdout) {
 }
 
 async function runPreflight(flags, stdout) {
-  const workingDir = resolveWorkingDir(flags);
-  const repoRoot = findRepoRoot(workingDir) || workingDir;
-  const config = loadConfig(repoRoot);
-  const registry = discoverRegistry(repoRoot, config);
-  const taskContext = buildTaskContext(workingDir, config, flags);
-  const routed = routeContext(taskContext, registry, config);
-  const bundle = composeBundle({
-    repoRoot,
-    taskContext,
-    classification: routed.classification,
-    selectedSkills: routed.selectedSkills,
-    selectedMemory: routed.selectedMemory,
-    warnings: routed.warnings,
-    config,
-    trace: routed.trace
-  });
+  const { bundle } = buildPreflightState(flags);
 
   if (flags.json) {
     jsonOutput(stdout, bundle);
@@ -330,6 +355,21 @@ async function runPreflight(flags, stdout) {
 
 async function runExplain(flags, stdout) {
   return runPreflight({ ...flags, explain: true }, stdout);
+}
+
+async function runHandoff(flags, stdout) {
+  const state = buildPreflightState(flags);
+  const selection = resolveBackendSelection(flags.backend, state.config, {
+    model: flags.model
+  });
+  const handoff = buildBackendEnvelope(state.bundle, selection, state.config);
+
+  if (flags.json) {
+    jsonOutput(stdout, handoff);
+    return;
+  }
+
+  stdout.write(renderBackendBundle(handoff));
 }
 
 async function main(argv = process.argv.slice(2), io = {}) {
@@ -362,6 +402,11 @@ async function main(argv = process.argv.slice(2), io = {}) {
     return;
   }
 
+  if (command === 'handoff') {
+    await runHandoff(flags, stdout);
+    return;
+  }
+
   if (command === 'explain') {
     await runExplain(flags, stdout);
     return;
@@ -382,6 +427,7 @@ module.exports = {
   runDoctor,
   runExplain,
   runInit,
+  runHandoff,
   runPreflight,
   runScan,
   validateRegistry

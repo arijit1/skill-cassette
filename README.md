@@ -1,10 +1,10 @@
-# ctx-router
+# skill-cassette
 
-Automatic context routing for agents. `ctx-router` reads task signals from the repo, the branch, and the prompt, then loads the right skill and memory before the agent acts.
+Automatic context routing and backend handoff for agents. `skill-cassette` reads task signals from the repo, the branch, and the prompt, then loads the right skill and memory before handing the bundle to Ollama, Claude, Codex, or another compatible backend.
 
 ## What it is
 
-`ctx-router` is a local-first preflight layer for AI-assisted work. It is built to keep agents from forgetting repo conventions, docs style, or code review rules.
+`skill-cassette` is a local-first preflight layer for AI-assisted work. It is built to keep agents from forgetting repo conventions, docs style, or code review rules.
 
 It ships with:
 
@@ -12,6 +12,7 @@ It ships with:
 - repo-local skill manifests
 - repo-local memory cards
 - explainable, read-only preflight output
+- backend adapters for portable handoff payloads
 - a GitHub Action scaffold for pull requests
 
 ## Quickstart
@@ -21,6 +22,7 @@ node bin/ctx.js --help
 node bin/ctx.js scan
 node bin/ctx.js preflight --task "Update the README examples"
 node bin/ctx.js preflight --task "Update the README examples" --json
+node bin/ctx.js handoff --backend ollama --model llama3 --json
 ```
 
 If you want the `ctx` command in your shell while developing locally:
@@ -29,7 +31,7 @@ If you want the `ctx` command in your shell while developing locally:
 npm link
 ```
 
-Then scaffold `skills/`, `memory/`, and a starter GitHub Action in another repo:
+Then scaffold `skills/`, `memory/`, config, and a starter GitHub Action in another repo:
 
 ```bash
 ctx init
@@ -41,7 +43,8 @@ ctx init
 - Code and docs workflows
 - Git branch, diff, file-path, and task-text signals
 - Explainable skill and memory selection
-- CLI commands: `init`, `scan`, `doctor`, `preflight`, `explain`
+- Backend handoff for Ollama, Claude, Codex, and generic wrappers
+- CLI commands: `init`, `scan`, `doctor`, `preflight`, `handoff`, `explain`
 - GitHub Action scaffold for PR preflight
 
 ## What v0 does not do
@@ -51,6 +54,7 @@ ctx init
 - PDF extraction as a first-class path
 - Background monitoring
 - Multi-agent orchestration
+- Direct backend execution from the router
 
 ## How it works
 
@@ -58,7 +62,8 @@ ctx init
 2. Classify the task as docs or code work.
 3. Match repo-local skills and memory cards.
 4. Emit a preflight bundle with reasons and guardrails.
-5. Let the agent use that bundle before it acts.
+5. Shape the bundle into a backend-specific handoff payload.
+6. Let the agent or wrapper use that payload before it acts.
 
 ## Repo layout
 
@@ -67,6 +72,23 @@ ctx init
 - `examples/`: demo config and task inputs
 - `tests/`: manifest and CLI contract tests
 - `.github/workflows/preflight.yml`: PR preflight scaffold
+
+## Backend adapters
+
+`skill-cassette` does not run the model itself. It prepares a portable handoff for the backend you choose.
+
+- `ollama` favors one flattened prompt string.
+- `claude` favors a system message plus a user message.
+- `codex` uses the same structured message envelope.
+- `generic` keeps the payload backend-neutral.
+
+Set `backend.default` in `.skill-cassette.json` to choose the default adapter.
+
+Use the handoff command when you want the prompt shaped for a specific backend:
+
+```bash
+node bin/ctx.js handoff --backend claude --json
+```
 
 ## Example skill set
 

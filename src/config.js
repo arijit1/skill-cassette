@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const CONFIG_FILENAMES = ['.skill-cassette.json', '.ctx-router.json'];
+
 const DEFAULT_CONFIG = {
   version: 1,
   mode: 'recommend',
@@ -21,6 +23,12 @@ const DEFAULT_CONFIG = {
     use_branch_name: true,
     use_changed_files: true,
     use_task_text: true
+  },
+  backend: {
+    default: 'auto',
+    preferred: ['ollama', 'claude', 'codex'],
+    model: null,
+    models: {}
   },
   artifact_detection: {
     code_extensions: ['.ts', '.tsx', '.js', '.go', '.py', '.cjs', '.mjs', '.jsx', '.rs', '.java'],
@@ -47,7 +55,9 @@ function resolveConfigPath(repoRoot, explicitPath) {
     candidates.push(explicitPath);
   }
 
-  candidates.push(path.join(repoRoot, '.ctx-router.json'));
+  for (const fileName of CONFIG_FILENAMES) {
+    candidates.push(path.join(repoRoot, fileName));
+  }
 
   return candidates.find((candidate) => fs.existsSync(candidate)) || candidates[0];
 }
@@ -82,11 +92,14 @@ function readJsonFile(filePath) {
 
 function loadConfig(repoRoot, options = {}) {
   const configPath = resolveConfigPath(repoRoot, options.configPath);
+  const configExists = fs.existsSync(configPath);
 
-  if (!fs.existsSync(configPath)) {
+  if (!configExists) {
     return {
       ...DEFAULT_CONFIG,
       repo_root: repoRoot,
+      config_exists: false,
+      config_source: 'default',
       config_path: configPath
     };
   }
@@ -95,17 +108,20 @@ function loadConfig(repoRoot, options = {}) {
   return {
     ...mergeDeep(DEFAULT_CONFIG, parsed),
     repo_root: repoRoot,
+    config_exists: true,
+    config_source: 'file',
     config_path: configPath
   };
 }
 
 function writeConfig(repoRoot, config = DEFAULT_CONFIG) {
-  const filePath = path.join(repoRoot, '.ctx-router.json');
+  const filePath = path.join(repoRoot, '.skill-cassette.json');
   fs.writeFileSync(filePath, `${JSON.stringify(config, null, 2)}\n`);
   return filePath;
 }
 
 module.exports = {
+  CONFIG_FILENAMES,
   DEFAULT_CONFIG,
   loadConfig,
   mergeDeep,

@@ -22,18 +22,36 @@
     "use_changed_files": true,
     "use_task_text": true
   },
+  "backend": {
+    "default": "auto",
+    "preferred": [
+      "ollama",
+      "claude",
+      "codex"
+    ],
+    "model": null,
+    "models": {}
+  },
   "artifact_detection": {
     "code_extensions": [
       ".ts",
       ".tsx",
       ".js",
       ".go",
-      ".py"
+      ".py",
+      ".cjs",
+      ".mjs",
+      ".jsx",
+      ".rs",
+      ".java"
     ],
     "docs_extensions": [
       ".md",
       ".markdown",
       ".rst"
+    ],
+    "pdf_extensions": [
+      ".pdf"
     ]
   },
   "policy": {

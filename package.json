@@ -1,12 +1,11 @@
 {
-  "name": "ctx-router",
+  "name": "skill-cassette",
   "version": "0.1.0",
-  "description": "Local-first agent context router that loads the right skills and memory before an agent runs.",
+  "description": "Local-first context compiler for agents that loads the right skills and memory, then shapes a handoff for Ollama, Claude, or Codex.",
   "type": "commonjs",
   "main": "src/index.js",
   "bin": {
-    "ctx": "./bin/ctx.js",
-    "ctx-router": "./bin/ctx.js"
+    "ctx": "./bin/ctx.js"
   },
   "files": [
     "bin/",
@@ -15,6 +14,7 @@
     "memory/",
     "examples/",
     "README.md",
+    ".skill-cassette.json",
     ".ctx-router.json",
     "LICENSE"
   ],
@@ -31,7 +31,11 @@
     "cli",
     "skills",
     "memory",
-    "preflight"
+    "preflight",
+    "backend",
+    "ollama",
+    "claude",
+    "codex"
   ],
   "license": "MIT"
 }

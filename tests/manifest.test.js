@@ -71,7 +71,7 @@ test('instruction files are present and non-empty', () => {
 });
 
 test('demo config matches the planned v0 contract', () => {
-  const config = readJson('examples/ctx-router.config.example.json');
+  const config = readJson('examples/skill-cassette.config.example.json');
 
   assert.equal(config.version, 1);
   assert.equal(config.mode, 'recommend');
@@ -79,6 +79,9 @@ test('demo config matches the planned v0 contract', () => {
   assert.equal(config.paths.skills, './skills');
   assert.equal(config.paths.memory, './memory');
   assert.ok(Array.isArray(config.paths.docs));
+  assert.equal(config.backend.default, 'auto');
+  assert.ok(Array.isArray(config.backend.preferred));
+  assert.ok(config.backend.preferred.includes('ollama'));
   assert.equal(config.routing.max_skills, 3);
   assert.equal(config.routing.max_memory_cards, 5);
   assert.equal(config.routing.confidence_threshold, 0.6);
