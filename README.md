@@ -29,7 +29,7 @@ Start here if you want the fastest path from a fresh repo to a workspace-local h
 ctx init
 ctx handoff --backend codex --json
 code .skill-cassette/handoff.json
-codex --handoff-file .skill-cassette/handoff.json
+node -e "const fs=require('node:fs');process.stdout.write(JSON.parse(fs.readFileSync('.skill-cassette/handoff.json','utf8')).execution.prompt_text)" | codex exec --cd . --full-auto -
 ```
 
 If you want the `ctx` command in your shell while developing locally:
@@ -119,7 +119,7 @@ After handoff generation, the CLI prints the backend command to run in your repo
 
 ```bash
 npm link
-codex --handoff-file .skill-cassette/handoff.json
+node -e "const fs=require('node:fs');process.stdout.write(JSON.parse(fs.readFileSync('.skill-cassette/handoff.json','utf8')).execution.prompt_text)" | codex exec --cd . --full-auto -
 ```
 
 bridge helper is optional/internal sample code; use it only if you want a reference wrapper in your own repo.
@@ -127,7 +127,7 @@ bridge helper is optional/internal sample code; use it only if you want a refere
 If you want to reuse the saved handoff file directly:
 
 ```bash
-codex --handoff-file .skill-cassette/handoff.json
+node -e "const fs=require('node:fs');process.stdout.write(JSON.parse(fs.readFileSync('.skill-cassette/handoff.json','utf8')).execution.prompt_text)" | codex exec --cd . --full-auto -
 ```
 
 ## Example skill set

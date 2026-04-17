@@ -73,7 +73,7 @@ test('ctx init runs guided discovery and suggests the next handoff step', () => 
     assert.match(result.stdout, /discovery:/i);
     assert.match(result.stdout, /next:/i);
     assert.match(result.stdout, /ctx handoff --backend codex --json/i);
-    assert.match(result.stdout, /backend command: codex --handoff-file/i);
+    assert.match(result.stdout, /backend command: .*codex exec --cd .* --full-auto/i);
     assert.match(result.stdout, /saved handoff file/i);
     assert.ok(fs.existsSync(path.join(tempRoot, '.skill-cassette', 'agent-bridge.mjs')));
   });
@@ -111,6 +111,6 @@ test('ctx init can generate the handoff immediately when the user confirms', asy
     assert.match(stdoutText, /Generate the handoff now with Codex\?/i);
     assert.match(stdoutText, /ctx handoff --backend codex --json/i);
     assert.match(stderrText, /Next step: run this backend command in your workspace/i);
-    assert.match(stderrText, /backend command: codex --handoff-file/i);
+    assert.match(stderrText, /backend command: .*codex exec --cd .* --full-auto/i);
   });
 });

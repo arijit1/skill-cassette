@@ -282,26 +282,39 @@ function saveHandoffFile(filePath, handoff) {
   fs.writeFileSync(filePath, `${JSON.stringify(handoff, null, 2)}\n`);
 }
 
-function buildBackendCommand(repoRoot, handoffFilePath, backendId = 'codex') {
+function buildCodexExecCommand(repoRoot, handoffFilePath, model = null) {
+  const relativeHandoffFile = path.relative(repoRoot, handoffFilePath) || handoffFilePath;
+  const quotedHandoffFile = JSON.stringify(relativeHandoffFile);
+  const quotedModel = model ? ` -m ${JSON.stringify(model)}` : '';
+  const promptReader = `node -e "const fs=require('node:fs');const handoff=JSON.parse(fs.readFileSync(${quotedHandoffFile},'utf8'));process.stdout.write(handoff.execution?.prompt_text || '')"`;
+
+  return `${promptReader} | codex exec --cd . --full-auto${quotedModel} -`;
+}
+
+function buildBackendCommand(repoRoot, handoffFilePath, backendId = 'codex', model = null) {
   const relativeHandoffFile = path.relative(repoRoot, handoffFilePath) || handoffFilePath;
   const quotedHandoffFile = JSON.stringify(relativeHandoffFile);
 
-  if (backendId === 'codex' || backendId === 'claude') {
-    return `${backendId} --handoff-file ${quotedHandoffFile}`;
+  if (backendId === 'codex') {
+    return buildCodexExecCommand(repoRoot, handoffFilePath, model);
+  }
+
+  if (backendId === 'claude') {
+    return `node .skill-cassette/agent-bridge.mjs --backend claude --handoff-file ${quotedHandoffFile}`;
   }
 
   if (backendId === 'ollama') {
-    return `node .skill-cassette/agent-bridge.mjs --handoff-file ${quotedHandoffFile}`;
+    return `node .skill-cassette/agent-bridge.mjs --backend ollama --handoff-file ${quotedHandoffFile}`;
   }
 
-  return `${backendId} --handoff-file ${quotedHandoffFile}`;
+  return `node .skill-cassette/agent-bridge.mjs --handoff-file ${quotedHandoffFile}`;
 }
 
-function printHandoffNextStep(stream, repoRoot, handoffFilePath, backendId = 'codex') {
+function printHandoffNextStep(stream, repoRoot, handoffFilePath, backendId = 'codex', model = null) {
   const relativeHandoffFile = path.relative(repoRoot, handoffFilePath) || handoffFilePath;
 
   stream.write('Next step: run this backend command in your workspace:\n');
-  stream.write(`backend command: ${buildBackendCommand(repoRoot, handoffFilePath, backendId)}\n`);
+  stream.write(`backend command: ${buildBackendCommand(repoRoot, handoffFilePath, backendId, model)}\n`);
   stream.write(`saved handoff file: ${relativeHandoffFile}\n`);
   stream.write('bridge helper is optional/internal sample code; use it only if you want a reference wrapper in your own repo.\n');
 }
@@ -341,7 +354,7 @@ function buildInitGuide({ repoRoot, handoffFilePath, doctorReport, scanReport, b
   lines.push('next:');
   lines.push(`1. ctx handoff --backend ${backendId} --json`);
   lines.push('2. edit .skill-cassette/handoff.json if you want to review it');
-  lines.push(`3. backend command: ${buildBackendCommand(repoRoot, handoffFilePath, backendId)}`);
+  lines.push(`3. backend command: ${buildBackendCommand(repoRoot, handoffFilePath, backendId, backendSelection?.model || null)}`);
   lines.push('4. ctx init can generate the handoff now if you confirm at the prompt.');
   lines.push('');
   lines.push(`saved handoff file: ${path.relative(repoRoot, handoffFilePath)}`);
@@ -599,13 +612,13 @@ async function runHandoff(flags, stdout, io = {}) {
 
   if (flags.json) {
     jsonOutput(stdout, handoffForDisk);
-    printHandoffNextStep(stderr, state.repoRoot, handoffFilePath, selection.resolved);
+    printHandoffNextStep(stderr, state.repoRoot, handoffFilePath, selection.resolved, selection.model);
     return;
   }
 
   stdout.write(renderBackendBundle(handoffForDisk));
   stdout.write(`\nsaved handoff file: ${path.relative(state.repoRoot, handoffFilePath)}\n`);
-  stdout.write(`backend command: ${buildBackendCommand(state.repoRoot, handoffFilePath, selection.resolved)}\n`);
+  stdout.write(`backend command: ${buildBackendCommand(state.repoRoot, handoffFilePath, selection.resolved, selection.model)}\n`);
   stdout.write('bridge helper is optional/internal sample code; use it only if you want a reference wrapper in your own repo.\n');
 }
 

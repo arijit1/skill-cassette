@@ -117,6 +117,10 @@ function resolveHandoffFilePath(flags) {
   return path.resolve(flags.cwd || process.cwd(), input);
 }
 
+function resolveLaunchRoot(handoffFilePath) {
+  return path.dirname(path.dirname(handoffFilePath));
+}
+
 function isInteractive() {
   return Boolean(process.stdin.isTTY && process.stdout.isTTY);
 }
@@ -149,23 +153,21 @@ function promptEnter(question) {
   });
 }
 
-function buildLaunchCommand(handoff, handoffFilePath) {
-  if (handoff?.backend?.id === 'codex' || handoff?.backend?.id === 'claude') {
-    return {
-      program: handoff.backend.id,
-      args: ['--handoff-file', handoffFilePath]
-    };
+function buildCodexExecCommand(handoff, handoffFilePath) {
+  const launchRoot = resolveLaunchRoot(handoffFilePath);
+  const args = ['exec', '--cd', launchRoot, '--full-auto'];
+
+  if (handoff?.backend?.model) {
+    args.push('-m', String(handoff.backend.model));
   }
 
-  if (handoff?.backend?.id === 'ollama' && handoff?.execution?.command?.program) {
-    return handoff.execution.command;
-  }
+  args.push('-');
 
-  if (handoff?.execution?.command?.program) {
-    return handoff.execution.command;
-  }
-
-  return null;
+  return {
+    program: 'codex',
+    args,
+    input: String(handoff?.execution?.prompt_text || '')
+  };
 }
 
 function printUsage() {
@@ -181,7 +183,7 @@ function printUsage() {
     '  - Install or link skill-cassette so the ctx command is available.',
     '  - Use --handoff-file to reuse an editable saved JSON context.',
     '  - Bridge helper is optional/internal sample code; use it only as a reference wrapper.',
-    '  - Codex and Claude launch directly from the saved handoff file.',
+    '  - Codex reads the saved handoff file and streams the prompt into codex exec.',
     '  - Ollama executes directly when skill-cassette produces execution.command.'
   ].join('\n'));
   process.stdout.write('\n');
@@ -296,11 +298,15 @@ async function main() {
     await maybePauseForEdit(handoffFilePath);
   }
 
-  const launchCommand = handoffFilePath ? buildLaunchCommand(handoff, handoffFilePath) : null;
+  const launchCommand = handoffFilePath && handoff?.backend?.id === 'codex'
+    ? buildCodexExecCommand(handoff, handoffFilePath)
+    : null;
 
   if (launchCommand?.program) {
     const result = runCommand(launchCommand.program, launchCommand.args || [], {
-      stdio: 'inherit'
+      input: launchCommand.input,
+      encoding: 'utf8',
+      stdio: ['pipe', 'inherit', 'inherit']
     });
 
     if (result.error) {

@@ -61,19 +61,19 @@ cliTest('ctx preflight --json returns a machine-readable bundle', () => {
 });
 
 cliTest('ctx handoff --json returns a backend-specific envelope', () => {
-  const result = runCtx(['handoff', '--task', 'Update README examples', '--backend', 'claude', '--json']);
+  const result = runCtx(['handoff', '--task', 'Update README examples', '--backend', 'codex', '--json']);
 
   assert.equal(result.status, 0, result.stderr);
   const payload = JSON.parse(result.stdout);
 
-  assert.equal(payload.backend.id, 'claude');
+  assert.equal(payload.backend.id, 'codex');
   assert.equal(payload.backend.transport, 'messages');
   assert.ok(typeof payload.execution.prompt_text === 'string');
   assert.ok(Array.isArray(payload.execution.messages));
   assert.equal(payload.execution.messages[0].role, 'system');
   assert.ok(typeof payload.handoff_file === 'string');
   assert.match(result.stderr, /Next step: run this backend command in your workspace/i);
-  assert.match(result.stderr, /backend command: claude --handoff-file/i);
+  assert.match(result.stderr, /backend command: .*codex exec --cd .* --full-auto/i);
   assert.match(result.stderr, /saved handoff file:/i);
   assert.match(result.stderr, /bridge helper is optional\/internal sample code/i);
 });

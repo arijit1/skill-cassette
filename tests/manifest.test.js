@@ -75,7 +75,7 @@ test('README makes the workspace runner obvious and keeps the repo sample second
 
   assert.match(readme, /backend command/i);
   assert.match(readme, /bridge helper is optional\/internal sample code/i);
-  assert.match(readme, /codex --handoff-file/i);
+  assert.match(readme, /codex exec --cd/i);
   assert.match(readme, /Quickstart/i);
 });
 
