@@ -39,6 +39,7 @@ npm link
 
 Why the saved file exists: it gives you one place to inspect or tweak the handoff before a backend runs.
 Future compaction and persistent memory recovery are intentionally not part of v0; they stay as later work if the repo needs deeper state retention.
+The shipped CLI and workflow scaffold are Node-based in v0, so non-Node repos may need a custom wrapper or a retargeted workflow entrypoint instead of using the example `npm` / `node` path as-is.
 
 ## v0 scope
 
@@ -60,6 +61,7 @@ Future compaction and persistent memory recovery are intentionally not part of v
 - Multi-agent orchestration
 - Direct backend execution from the router
 - Persistent memory compaction as a v0 guarantee
+- Node-shaped workflow scaffolding for every repo type
 
 ## How it works
 
