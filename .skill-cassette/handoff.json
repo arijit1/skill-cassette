@@ -232,5 +232,6 @@
     },
     "saved_handoff_file": ".skill-cassette/handoff.json"
   },
+  "task_text": "Update README examples",
   "handoff_file": ".skill-cassette/handoff.json"
 }

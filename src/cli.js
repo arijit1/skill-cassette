@@ -182,6 +182,16 @@ function askYesNoChoice(stdin, stdout, question) {
   });
 }
 
+function askOptionalTextChoice(stdin, stdout, question) {
+  return new Promise((resolve) => {
+    const rl = createPrompt(stdin, stdout);
+    rl.question(blue(`${question} `, stdout), (answer) => {
+      rl.close();
+      resolve(String(answer || '').trim());
+    });
+  });
+}
+
 function createHandoffArtifacts(flags) {
   const state = buildPreflightState(flags);
   const selection = resolveBackendSelection(flags.backend, state.config, {
@@ -191,6 +201,7 @@ function createHandoffArtifacts(flags) {
   const handoffFilePath = resolveHandoffFilePath(state.repoRoot, flags);
   const handoffForDisk = {
     ...handoff,
+    task_text: state.taskContext.task_text || '',
     handoff_file: path.relative(state.repoRoot, handoffFilePath) || path.basename(handoffFilePath),
     execution: {
       ...handoff.execution,
@@ -371,8 +382,9 @@ function buildInitGuide({ repoRoot, handoffFilePath, doctorReport, scanReport, b
   lines.push('');
   lines.push('next:');
   lines.push(blue(`1. ctx handoff --backend ${backendId} --json`, process.stdout));
-  lines.push(blue('2. optionally edit .skill-cassette/handoff.json', process.stdout));
-  lines.push(blue('3. answer yes at the prompt to launch Codex automatically.', process.stdout));
+  lines.push(blue('2. optionally share what you are working on when prompted', process.stdout));
+  lines.push(blue('3. optionally edit .skill-cassette/handoff.json', process.stdout));
+  lines.push(blue('4. answer yes at the prompt to launch Codex automatically.', process.stdout));
   lines.push('');
   lines.push(blue(`saved handoff file: ${path.relative(repoRoot, handoffFilePath)}`, process.stdout));
 
@@ -481,6 +493,19 @@ async function runInit(flags, io = {}) {
   }));
 
   if (stdin.isTTY && stdout.isTTY) {
+    if (!flags.task) {
+      const taskText = await askOptionalTextChoice(
+        stdin,
+        stdout,
+        'What are you working on? (optional, press Enter to skip)'
+      );
+
+      if (taskText) {
+        flags.task = taskText;
+        stdout.write(`${blue('Task captured for the saved handoff.', stdout)}\n`);
+      }
+    }
+
     const shouldGenerateHandoff = await askYesNoChoice(
       stdin,
       stdout,

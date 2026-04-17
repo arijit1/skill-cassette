@@ -20,7 +20,7 @@ It ships with:
 Start here if you want the fastest path from a fresh repo to a saved handoff and a clear next-step prompt:
 
 1. Initialize the repo-local scaffold.
-2. Let `ctx init` guide scaffold refresh or continue, run `doctor` and `scan`, then ask whether to generate the handoff and show the next-step prompt.
+2. Let `ctx init` guide scaffold refresh or continue, run `doctor` and `scan`, ask what you are working on, then ask whether to generate the handoff and show the next-step prompt.
 3. Edit `.skill-cassette/handoff.json` only if you want to review the saved payload first.
 4. If you want to generate the handoff separately, run `ctx handoff --backend codex --json` and follow the saved-file guidance it prints.
 
@@ -35,7 +35,7 @@ If you want the `ctx` command in your shell while developing locally:
 npm link
 ```
 
-`ctx init` creates `skills/`, `memory/`, config, `.skill-cassette/agent-bridge.mjs`, and a starter GitHub Action in your repo. It also runs a quick `doctor` and `scan`, then asks whether to generate the handoff and show the next-step prompt.
+`ctx init` creates `skills/`, `memory/`, config, `.skill-cassette/agent-bridge.mjs`, and a starter GitHub Action in your repo. It also runs a quick `doctor` and `scan`, asks what you are working on, then asks whether to generate the handoff and show the next-step prompt.
 
 Why the saved file exists: it gives you one place to inspect or tweak the handoff before a backend runs.
 Future compaction and persistent memory recovery are intentionally not part of v0; they stay as later work if the repo needs deeper state retention.

@@ -109,6 +109,7 @@ test('ctx init can generate the handoff immediately when the user confirms', asy
     });
 
     process.nextTick(() => {
+      stdin.write('Fix README examples\n');
       stdin.write('y\n');
       stdin.end();
     });
@@ -118,12 +119,16 @@ test('ctx init can generate the handoff immediately when the user confirms', asy
     const handoffPath = path.join(tempRoot, '.skill-cassette', 'handoff.json');
 
     assert.ok(fs.existsSync(handoffPath), 'expected init to generate a saved handoff file');
+    const saved = JSON.parse(fs.readFileSync(handoffPath, 'utf8'));
     assert.match(stdoutText, /Generate and launch Codex now from the saved handoff\?/i);
+    assert.match(stdoutText, /What are you working on\? \(optional, press Enter to skip\)/i);
+    assert.match(stdoutText, /Task captured for the saved handoff/i);
     assert.match(stdoutText, /ctx handoff --backend codex --json/i);
     assert.match(stderrText, /Launching Codex from the saved handoff file/i);
     assert.equal(calls.length, 1);
     assert.equal(calls[0].program, 'codex');
     assert.match(calls[0].args.join(' '), /exec --cd .* --full-auto -/i);
     assert.ok(String(calls[0].options.input || '').length > 0);
+    assert.match(saved.task_text, /Fix README examples/i);
   });
 });
