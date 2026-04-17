@@ -70,11 +70,12 @@ test('instruction files are present and non-empty', () => {
   assert.match(codeInstructions, /tests/i);
 });
 
-test('README makes the workspace runner obvious and keeps the repo sample secondary', () => {
+test('README makes the auto-launch prompt obvious and keeps the repo sample secondary', () => {
   const readme = readText('README.md');
 
   assert.match(readme, /Codex will launch automatically/i);
   assert.match(readme, /bridge helper is optional\/internal sample code/i);
+  assert.match(readme, /saved handoff/i);
   assert.match(readme, /Quickstart/i);
 });
 

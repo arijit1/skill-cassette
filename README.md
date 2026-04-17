@@ -1,6 +1,6 @@
 # skill-cassette
 
-Automatic context routing and backend handoff for agents. `skill-cassette` reads task signals from the repo, the branch, and the prompt, then loads the right skill and memory before handing the bundle to Ollama, Claude, Codex, or another compatible backend.
+Automatic context routing and backend handoff for agents. `skill-cassette` is a repo-owned handoff layer: it reads task signals from the repo, the branch, and the prompt, then loads the right skill and memory before handing the bundle to Ollama, Claude, Codex, or another compatible backend.
 
 ## What it is
 
@@ -17,12 +17,12 @@ It ships with:
 
 ## Quickstart
 
-Start here if you want the fastest path from a fresh repo to a workspace-local handoff:
+Start here if you want the fastest path from a fresh repo to a saved handoff and Codex auto-launch prompt:
 
 1. Initialize the repo-local scaffold.
-2. Let `ctx init` generate and launch Codex automatically when it asks.
+2. Let `ctx init` guide scaffold refresh or continue, run `doctor` and `scan`, then ask whether to generate and launch Codex from the saved handoff.
 3. Edit `.skill-cassette/handoff.json` only if you want to review the saved payload first.
-4. If you skip the prompt, run `ctx handoff --backend codex --json` and then answer yes at the prompt.
+4. If you want to generate the handoff separately, run `ctx handoff --backend codex --json` and follow the saved-file guidance it prints.
 
 ```bash
 ctx init
@@ -35,9 +35,10 @@ If you want the `ctx` command in your shell while developing locally:
 npm link
 ```
 
-`ctx init` creates `skills/`, `memory/`, config, `.skill-cassette/agent-bridge.mjs`, and a starter GitHub Action in your repo. It also runs a quick `doctor` and `scan`, then prints the saved handoff path and the backend command so you know exactly what to do next.
+`ctx init` creates `skills/`, `memory/`, config, `.skill-cassette/agent-bridge.mjs`, and a starter GitHub Action in your repo. It also runs a quick `doctor` and `scan`, then asks whether to generate and launch Codex from the saved handoff.
 
 Why the saved file exists: it gives you one place to inspect or tweak the handoff before a backend runs.
+Future compaction and persistent memory recovery are intentionally not part of v0; they stay as later work if the repo needs deeper state retention.
 
 ## v0 scope
 
@@ -48,6 +49,7 @@ Why the saved file exists: it gives you one place to inspect or tweak the handof
 - Backend handoff for Ollama, Claude, Codex, and generic wrappers
 - CLI commands: `init`, `scan`, `doctor`, `preflight`, `handoff`, `explain`
 - GitHub Action scaffold for PR preflight
+- No promise of generalized memory persistence or compaction in v0
 
 ## What v0 does not do
 
@@ -57,6 +59,7 @@ Why the saved file exists: it gives you one place to inspect or tweak the handof
 - Background monitoring
 - Multi-agent orchestration
 - Direct backend execution from the router
+- Persistent memory compaction as a v0 guarantee
 
 ## How it works
 

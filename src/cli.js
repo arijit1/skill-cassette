@@ -94,18 +94,6 @@ function runCommand(program, args, options = {}) {
   return spawnSync(program, args, options);
 }
 
-function supportsColor(stream) {
-  return Boolean(stream && stream.isTTY && !process.env.NO_COLOR);
-}
-
-function blue(text, stream = process.stdout) {
-  if (!supportsColor(stream)) {
-    return text;
-  }
-
-  return `\u001b[34m${text}\u001b[39m`;
-}
-
 function printUsage(stdout) {
   stdout.write([
     'skill-cassette',

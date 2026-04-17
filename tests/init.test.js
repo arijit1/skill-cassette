@@ -64,7 +64,7 @@ test('ctx init --refresh rewrites the scaffold files', () => {
   });
 });
 
-test('ctx init runs guided discovery and suggests the next handoff step', () => {
+test('ctx init runs guided discovery and points to the saved handoff and Codex auto-launch prompt', () => {
   return withTempRepo((tempRoot) => {
     const result = runCtx(['init'], tempRoot);
 
@@ -73,6 +73,7 @@ test('ctx init runs guided discovery and suggests the next handoff step', () => 
     assert.match(result.stdout, /discovery:/i);
     assert.match(result.stdout, /next:/i);
     assert.match(result.stdout, /ctx handoff --backend codex --json/i);
+    assert.match(result.stdout, /optionally edit \.skill-cassette\/handoff\.json/i);
     assert.match(result.stdout, /answer yes at the prompt to launch Codex automatically/i);
     assert.match(result.stdout, /saved handoff file/i);
     assert.ok(fs.existsSync(path.join(tempRoot, '.skill-cassette', 'agent-bridge.mjs')));
