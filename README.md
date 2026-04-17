@@ -1,6 +1,6 @@
 # skill-cassette
 
-Automatic context routing and backend handoff for agents. `skill-cassette` is a repo-owned handoff layer: it reads task signals from the repo, the branch, and the prompt, then loads the right skill and memory before handing the bundle to Ollama, Claude, Codex, or another compatible backend.
+Repo-owned handoff layer for agents that makes the next step obvious. `skill-cassette` reads task signals from the repo, the branch, and the prompt, then loads the right skill and memory before handing the bundle to Ollama, Claude, Codex, or another compatible backend.
 
 ## What it is
 
@@ -17,10 +17,10 @@ It ships with:
 
 ## Quickstart
 
-Start here if you want the fastest path from a fresh repo to a saved handoff and Codex auto-launch prompt:
+Start here if you want the fastest path from a fresh repo to a saved handoff and a clear next-step prompt:
 
 1. Initialize the repo-local scaffold.
-2. Let `ctx init` guide scaffold refresh or continue, run `doctor` and `scan`, then ask whether to generate and launch Codex from the saved handoff.
+2. Let `ctx init` guide scaffold refresh or continue, run `doctor` and `scan`, then ask whether to generate the handoff and show the next-step prompt.
 3. Edit `.skill-cassette/handoff.json` only if you want to review the saved payload first.
 4. If you want to generate the handoff separately, run `ctx handoff --backend codex --json` and follow the saved-file guidance it prints.
 
@@ -35,7 +35,7 @@ If you want the `ctx` command in your shell while developing locally:
 npm link
 ```
 
-`ctx init` creates `skills/`, `memory/`, config, `.skill-cassette/agent-bridge.mjs`, and a starter GitHub Action in your repo. It also runs a quick `doctor` and `scan`, then asks whether to generate and launch Codex from the saved handoff.
+`ctx init` creates `skills/`, `memory/`, config, `.skill-cassette/agent-bridge.mjs`, and a starter GitHub Action in your repo. It also runs a quick `doctor` and `scan`, then asks whether to generate the handoff and show the next-step prompt.
 
 Why the saved file exists: it gives you one place to inspect or tweak the handoff before a backend runs.
 Future compaction and persistent memory recovery are intentionally not part of v0; they stay as later work if the repo needs deeper state retention.
@@ -111,7 +111,7 @@ node bin/ctx.js handoff --backend claude --json
 
 `ctx handoff --backend codex --json` also writes an editable handoff file at `.skill-cassette/handoff.json` by default. That file is what Codex uses when you want to review or tweak the context before execution.
 
-After handoff generation, the CLI tells you that Codex will launch automatically. The bridge helper is optional/internal sample code; use it only if you want a reference wrapper in your own repo.
+After handoff generation, the CLI tells you the next-step prompt to follow. The bridge helper is optional/internal sample code; use it only if you want a reference wrapper in your own repo.
 
 ## Optional Bridge
 
