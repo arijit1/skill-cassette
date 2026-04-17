@@ -75,6 +75,7 @@ test('sample backend bridge wrapper is present and documented', () => {
 
   assert.ok(bridge.length > 200);
   assert.match(bridge, /handoff.*--json/);
+  assert.match(bridge, /handoff-file/);
   assert.match(bridge, /execution\.command/);
   assert.match(bridge, /ollama/i);
 });

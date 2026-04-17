@@ -61,3 +61,17 @@ test('ctx init --refresh rewrites the scaffold files', () => {
     assert.match(result.stdout, /refreshed:/i);
   });
 });
+
+test('ctx init runs guided discovery and suggests the next bridge command', () => {
+  withTempRepo((tempRoot) => {
+    const result = runCtx(['init'], tempRoot);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /health:/i);
+    assert.match(result.stdout, /discovery:/i);
+    assert.match(result.stdout, /next:/i);
+    assert.match(result.stdout, /ctx handoff --backend/i);
+    assert.match(result.stdout, /agent-bridge\.mjs --handoff-file/i);
+    assert.match(result.stdout, /saved handoff file/i);
+  });
+});

@@ -71,4 +71,21 @@ cliTest('ctx handoff --json returns a backend-specific envelope', () => {
   assert.ok(typeof payload.execution.prompt_text === 'string');
   assert.ok(Array.isArray(payload.execution.messages));
   assert.equal(payload.execution.messages[0].role, 'system');
+  assert.ok(typeof payload.handoff_file === 'string');
+});
+
+cliTest('ctx handoff --json writes an editable handoff file', () => {
+  const result = runCtx(['handoff', '--task', 'Update README examples', '--backend', 'ollama', '--model', 'llama3', '--json']);
+
+  assert.equal(result.status, 0, result.stderr);
+  const payload = JSON.parse(result.stdout);
+  const handoffPath = path.join(repoRoot, payload.handoff_file);
+
+  assert.ok(fs.existsSync(handoffPath), `expected handoff file at ${handoffPath}`);
+  const saved = JSON.parse(fs.readFileSync(handoffPath, 'utf8'));
+
+  assert.equal(saved.handoff_file, payload.handoff_file);
+  assert.equal(saved.backend.id, 'ollama');
+  assert.equal(saved.execution.mode, 'cli');
+  assert.equal(saved.execution.saved_handoff_file, payload.handoff_file);
 });

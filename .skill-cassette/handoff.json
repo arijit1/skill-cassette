@@ -1,0 +1,236 @@
+{
+  "repo_root": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette",
+  "mode": "recommend",
+  "read_only": true,
+  "task_context": {
+    "repo_root": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette",
+    "task_text": "Update README examples",
+    "branch": null,
+    "changed_files": [],
+    "diff_summary": {
+      "added": 0,
+      "modified": 0,
+      "deleted": 0,
+      "renamed": 0,
+      "copied": 0,
+      "untracked": 0
+    },
+    "artifact_types": [],
+    "combined_text": "Update README examples"
+  },
+  "task_type": "docs_update",
+  "confidence": 0.85,
+  "selected_skills": [
+    {
+      "id": "docs-style-guide",
+      "name": "Docs Style Guide",
+      "version": "1.0.0",
+      "filePath": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette/skills/docs-style-guide/skill.json",
+      "instructionsPath": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette/skills/docs-style-guide/instructions.md",
+      "instructions_path": "skills/docs-style-guide/instructions.md",
+      "instructionsContent": "# Docs Style Guide\n\n- Keep examples executable and copy-paste friendly.\n- Prefer short headings and direct language.\n- Use bullets when they make the structure easier to scan.\n- Match the repo voice instead of adding marketing fluff inside technical docs.\n- When updating a README, keep the quickstart first and the caveats last.\n- If a command or snippet changes, make the example line up with the CLI contract.\n- Favor a small amount of context over a large wall of prose.\n",
+      "score": 0.63,
+      "reasons": [
+        "Matches task type docs_update.",
+        "Skill keywords match the task text or branch."
+      ]
+    }
+  ],
+  "selected_memory": [
+    {
+      "id": "repo-writing-conventions",
+      "title": "Repo Writing Conventions",
+      "summary": "Use short headings, executable examples, and explicit next steps. Keep README copy direct.",
+      "filePath": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette/memory/repo-writing-conventions.json",
+      "source": "human_correction",
+      "confidence": 0.9,
+      "score": 0.5,
+      "reasons": [
+        "Memory tags match the task text or branch.",
+        "Docs task type aligns with the memory card.",
+        "Human correction memory is prioritized."
+      ]
+    }
+  ],
+  "recommended_skills": [
+    {
+      "id": "docs-style-guide",
+      "name": "Docs Style Guide",
+      "version": "1.0.0",
+      "filePath": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette/skills/docs-style-guide/skill.json",
+      "instructionsPath": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette/skills/docs-style-guide/instructions.md",
+      "instructions_path": "skills/docs-style-guide/instructions.md",
+      "instructionsContent": "# Docs Style Guide\n\n- Keep examples executable and copy-paste friendly.\n- Prefer short headings and direct language.\n- Use bullets when they make the structure easier to scan.\n- Match the repo voice instead of adding marketing fluff inside technical docs.\n- When updating a README, keep the quickstart first and the caveats last.\n- If a command or snippet changes, make the example line up with the CLI contract.\n- Favor a small amount of context over a large wall of prose.\n",
+      "score": 0.63,
+      "reasons": [
+        "Matches task type docs_update.",
+        "Skill keywords match the task text or branch."
+      ]
+    }
+  ],
+  "recommended_memory": [
+    {
+      "id": "repo-writing-conventions",
+      "title": "Repo Writing Conventions",
+      "summary": "Use short headings, executable examples, and explicit next steps. Keep README copy direct.",
+      "filePath": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette/memory/repo-writing-conventions.json",
+      "source": "human_correction",
+      "confidence": 0.9,
+      "score": 0.5,
+      "reasons": [
+        "Memory tags match the task text or branch.",
+        "Docs task type aligns with the memory card.",
+        "Human correction memory is prioritized."
+      ]
+    }
+  ],
+  "warnings": [],
+  "trace": {
+    "classification": {
+      "task_type": "docs_update",
+      "confidence": 0.85,
+      "reasons": [
+        "Docs file types and docs-oriented language dominate the signal.",
+        "Docs-related keywords matched the task text.",
+        "Explicit task text was provided."
+      ],
+      "signals_used": [
+        "task_text",
+        "branch",
+        "changed_files",
+        "artifact_types"
+      ],
+      "artifact_summary": {
+        "docs_files": 0,
+        "code_files": 0
+      }
+    },
+    "scoredSkills": [
+      {
+        "id": "docs-style-guide",
+        "name": "Docs Style Guide",
+        "version": "1.0.0",
+        "filePath": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette/skills/docs-style-guide/skill.json",
+        "instructionsPath": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette/skills/docs-style-guide/instructions.md",
+        "instructions_path": "skills/docs-style-guide/instructions.md",
+        "instructionsContent": "# Docs Style Guide\n\n- Keep examples executable and copy-paste friendly.\n- Prefer short headings and direct language.\n- Use bullets when they make the structure easier to scan.\n- Match the repo voice instead of adding marketing fluff inside technical docs.\n- When updating a README, keep the quickstart first and the caveats last.\n- If a command or snippet changes, make the example line up with the CLI contract.\n- Favor a small amount of context over a large wall of prose.\n",
+        "score": 0.63,
+        "reasons": [
+          "Matches task type docs_update.",
+          "Skill keywords match the task text or branch."
+        ]
+      },
+      {
+        "id": "code-preflight",
+        "name": "Code Preflight",
+        "version": "1.0.0",
+        "filePath": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette/skills/code-preflight/skill.json",
+        "instructionsPath": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette/skills/code-preflight/instructions.md",
+        "instructions_path": "skills/code-preflight/instructions.md",
+        "instructionsContent": "# Code Preflight\n\n- Check scope before editing.\n- Prefer the smallest possible change that still solves the task.\n- Keep public interfaces explicit and stable.\n- Add or update tests when behavior changes.\n- Do not broaden the change set just because the agent can.\n- Call out risk when a change touches config, CLI behavior, or routing logic.\n- Use read-only reasoning first; write only after the preflight is clear.\n",
+        "score": 0,
+        "reasons": []
+      }
+    ],
+    "scoredMemory": [
+      {
+        "id": "repo-writing-conventions",
+        "title": "Repo Writing Conventions",
+        "summary": "Use short headings, executable examples, and explicit next steps. Keep README copy direct.",
+        "filePath": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette/memory/repo-writing-conventions.json",
+        "source": "human_correction",
+        "confidence": 0.9,
+        "score": 0.5,
+        "reasons": [
+          "Memory tags match the task text or branch.",
+          "Docs task type aligns with the memory card.",
+          "Human correction memory is prioritized."
+        ]
+      },
+      {
+        "id": "repo-code-conventions",
+        "title": "Repo Code Conventions",
+        "summary": "Prefer small, read-only preflight changes first; add tests and keep interfaces explicit.",
+        "filePath": "/Users/minhack/Documents/workspace/codex-workspace/opensource/skill-cassette/memory/repo-code-conventions.json",
+        "source": "human_correction",
+        "confidence": 0.85,
+        "score": 0.1,
+        "reasons": [
+          "Human correction memory is prioritized."
+        ]
+      }
+    ]
+  },
+  "context_blocks": [
+    {
+      "type": "system",
+      "title": "Skill Cassette Guardrails",
+      "content": "Read-only preflight.\nRecommend-only mode.\nDo not edit repository files.\nLet the agent use the selected skills and memory before acting."
+    },
+    {
+      "type": "task",
+      "title": "Task Summary",
+      "content": "Task type: docs_update\nConfidence: 0.85\nChanged files: none\nArtifact types: unknown"
+    },
+    {
+      "type": "skill",
+      "id": "docs-style-guide",
+      "title": "Docs Style Guide",
+      "content": "# Skill: Docs Style Guide\nid: docs-style-guide\nversion: 1.0.0\nreason: Matches task type docs_update.\n\n# Docs Style Guide\n\n- Keep examples executable and copy-paste friendly.\n- Prefer short headings and direct language.\n- Use bullets when they make the structure easier to scan.\n- Match the repo voice instead of adding marketing fluff inside technical docs.\n- When updating a README, keep the quickstart first and the caveats last.\n- If a command or snippet changes, make the example line up with the CLI contract.\n- Favor a small amount of context over a large wall of prose.\n",
+      "preview": "# Skill: Docs Style Guide\nid: docs-style-guide\nversion: 1.0.0\nreason: Matches task type docs_update.\n# Docs Style Guide\n- Keep examples executable and copy-paste friendly.\n- Prefer short headings and direct language.\n- Use bullets when they make the structure easier to scan.\n- Match the repo voice instead of adding marketing fluff inside technical docs.\n- When updating a README, keep the quickstart first and the caveats last.\n- If a command or snippet changes, make the example line up with the CLI contract.\n- Favor a small amount of context over a large wall of prose."
+    },
+    {
+      "type": "memory",
+      "id": "repo-writing-conventions",
+      "title": "Repo Writing Conventions",
+      "content": "# Memory: Repo Writing Conventions\nid: repo-writing-conventions\nsource: human_correction\nsummary: Use short headings, executable examples, and explicit next steps. Keep README copy direct.\nreason: Memory tags match the task text or branch.",
+      "preview": "# Memory: Repo Writing Conventions\nid: repo-writing-conventions\nsource: human_correction\nsummary: Use short headings, executable examples, and explicit next steps. Keep README copy direct.\nreason: Memory tags match the task text or branch."
+    }
+  ],
+  "context_text": "Read-only preflight.\nRecommend-only mode.\nDo not edit repository files.\nLet the agent use the selected skills and memory before acting.\n\nTask type: docs_update\nConfidence: 0.85\nChanged files: none\nArtifact types: unknown\n\n# Skill: Docs Style Guide\nid: docs-style-guide\nversion: 1.0.0\nreason: Matches task type docs_update.\n\n# Docs Style Guide\n\n- Keep examples executable and copy-paste friendly.\n- Prefer short headings and direct language.\n- Use bullets when they make the structure easier to scan.\n- Match the repo voice instead of adding marketing fluff inside technical docs.\n- When updating a README, keep the quickstart first and the caveats last.\n- If a command or snippet changes, make the example line up with the CLI contract.\n- Favor a small amount of context over a large wall of prose.\n\n\n# Memory: Repo Writing Conventions\nid: repo-writing-conventions\nsource: human_correction\nsummary: Use short headings, executable examples, and explicit next steps. Keep README copy direct.\nreason: Memory tags match the task text or branch.",
+  "meta": {
+    "changed_files_preview": "none",
+    "artifact_types": []
+  },
+  "backend": {
+    "id": "ollama",
+    "name": "Ollama",
+    "transport": "single_prompt",
+    "prompt_style": "single_prompt",
+    "requested": "ollama",
+    "resolved_from": "requested",
+    "model": "llama3"
+  },
+  "execution": {
+    "mode": "cli",
+    "system_text": "skill-cassette backend handoff\nBackend: Ollama\nLocal runner that commonly accepts one prompt string.\nThis backend prefers one flattened prompt string.\nFlatten the handoff into one prompt string.\nUseful for shell wrappers and local-first setups.",
+    "user_text": "Read-only preflight.\nRecommend-only mode.\nDo not edit repository files.\nLet the agent use the selected skills and memory before acting.\n\nTask type: docs_update\nConfidence: 0.85\nChanged files: none\nArtifact types: unknown\n\n# Skill: Docs Style Guide\nid: docs-style-guide\nversion: 1.0.0\nreason: Matches task type docs_update.\n\n# Docs Style Guide\n\n- Keep examples executable and copy-paste friendly.\n- Prefer short headings and direct language.\n- Use bullets when they make the structure easier to scan.\n- Match the repo voice instead of adding marketing fluff inside technical docs.\n- When updating a README, keep the quickstart first and the caveats last.\n- If a command or snippet changes, make the example line up with the CLI contract.\n- Favor a small amount of context over a large wall of prose.\n\n\n# Memory: Repo Writing Conventions\nid: repo-writing-conventions\nsource: human_correction\nsummary: Use short headings, executable examples, and explicit next steps. Keep README copy direct.\nreason: Memory tags match the task text or branch.",
+    "prompt_text": "skill-cassette backend handoff\nBackend: Ollama\nLocal runner that commonly accepts one prompt string.\nThis backend prefers one flattened prompt string.\nFlatten the handoff into one prompt string.\nUseful for shell wrappers and local-first setups.\n\nRead-only preflight.\nRecommend-only mode.\nDo not edit repository files.\nLet the agent use the selected skills and memory before acting.\n\nTask type: docs_update\nConfidence: 0.85\nChanged files: none\nArtifact types: unknown\n\n# Skill: Docs Style Guide\nid: docs-style-guide\nversion: 1.0.0\nreason: Matches task type docs_update.\n\n# Docs Style Guide\n\n- Keep examples executable and copy-paste friendly.\n- Prefer short headings and direct language.\n- Use bullets when they make the structure easier to scan.\n- Match the repo voice instead of adding marketing fluff inside technical docs.\n- When updating a README, keep the quickstart first and the caveats last.\n- If a command or snippet changes, make the example line up with the CLI contract.\n- Favor a small amount of context over a large wall of prose.\n\n\n# Memory: Repo Writing Conventions\nid: repo-writing-conventions\nsource: human_correction\nsummary: Use short headings, executable examples, and explicit next steps. Keep README copy direct.\nreason: Memory tags match the task text or branch.",
+    "messages": [
+      {
+        "role": "system",
+        "content": "skill-cassette backend handoff\nBackend: Ollama\nLocal runner that commonly accepts one prompt string.\nThis backend prefers one flattened prompt string.\nFlatten the handoff into one prompt string.\nUseful for shell wrappers and local-first setups."
+      },
+      {
+        "role": "user",
+        "content": "Read-only preflight.\nRecommend-only mode.\nDo not edit repository files.\nLet the agent use the selected skills and memory before acting.\n\nTask type: docs_update\nConfidence: 0.85\nChanged files: none\nArtifact types: unknown\n\n# Skill: Docs Style Guide\nid: docs-style-guide\nversion: 1.0.0\nreason: Matches task type docs_update.\n\n# Docs Style Guide\n\n- Keep examples executable and copy-paste friendly.\n- Prefer short headings and direct language.\n- Use bullets when they make the structure easier to scan.\n- Match the repo voice instead of adding marketing fluff inside technical docs.\n- When updating a README, keep the quickstart first and the caveats last.\n- If a command or snippet changes, make the example line up with the CLI contract.\n- Favor a small amount of context over a large wall of prose.\n\n\n# Memory: Repo Writing Conventions\nid: repo-writing-conventions\nsource: human_correction\nsummary: Use short headings, executable examples, and explicit next steps. Keep README copy direct.\nreason: Memory tags match the task text or branch."
+      }
+    ],
+    "command": {
+      "program": "ollama",
+      "args": [
+        "run",
+        "llama3",
+        "skill-cassette backend handoff\nBackend: Ollama\nLocal runner that commonly accepts one prompt string.\nThis backend prefers one flattened prompt string.\nFlatten the handoff into one prompt string.\nUseful for shell wrappers and local-first setups.\n\nRead-only preflight.\nRecommend-only mode.\nDo not edit repository files.\nLet the agent use the selected skills and memory before acting.\n\nTask type: docs_update\nConfidence: 0.85\nChanged files: none\nArtifact types: unknown\n\n# Skill: Docs Style Guide\nid: docs-style-guide\nversion: 1.0.0\nreason: Matches task type docs_update.\n\n# Docs Style Guide\n\n- Keep examples executable and copy-paste friendly.\n- Prefer short headings and direct language.\n- Use bullets when they make the structure easier to scan.\n- Match the repo voice instead of adding marketing fluff inside technical docs.\n- When updating a README, keep the quickstart first and the caveats last.\n- If a command or snippet changes, make the example line up with the CLI contract.\n- Favor a small amount of context over a large wall of prose.\n\n\n# Memory: Repo Writing Conventions\nid: repo-writing-conventions\nsource: human_correction\nsummary: Use short headings, executable examples, and explicit next steps. Keep README copy direct.\nreason: Memory tags match the task text or branch."
+      ]
+    },
+    "launch_hint": "Execution command is ready for a local wrapper or shell helper.",
+    "summary": {
+      "changed_files": "none",
+      "task_type": "docs_update",
+      "confidence": 0.85
+    },
+    "saved_handoff_file": ".skill-cassette/handoff.json"
+  },
+  "handoff_file": ".skill-cassette/handoff.json"
+}

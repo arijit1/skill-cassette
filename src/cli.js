@@ -82,7 +82,7 @@ function printUsage(stdout) {
     '  ctx scan [--cwd <dir>]',
     '  ctx doctor [--cwd <dir>]',
     '  ctx preflight [--task <text>] [--issue-file <file>] [--from-git] [--json] [--explain] [--cwd <dir>]',
-    '  ctx handoff [--task <text>] [--issue-file <file>] [--from-git] [--backend <name>] [--model <name>] [--json] [--cwd <dir>]',
+    '  ctx handoff [--task <text>] [--issue-file <file>] [--from-git] [--backend <name>] [--model <name>] [--handoff-file <file>] [--json] [--cwd <dir>]',
     '  ctx explain [--task <text>] [--issue-file <file>] [--from-git] [--cwd <dir>]',
     '',
     'Options:',
@@ -94,6 +94,7 @@ function printUsage(stdout) {
     '  --cwd             Base directory to run from',
     '  --backend         Backend adapter to target (ollama, claude, codex, generic)',
     '  --model           Optional model name for the chosen backend',
+    '  --handoff-file    Write the generated handoff JSON to this path',
     '  --refresh, --overwrite  Overwrite an existing scaffold when running init',
     '  --keep-existing         Keep the existing scaffold when running init',
     '  --explain         Show a longer decision trace',
@@ -256,6 +257,71 @@ function buildPreflightState(flags) {
   };
 }
 
+function resolveHandoffFilePath(repoRoot, flags = {}) {
+  if (flags.handoff_file) {
+    return path.isAbsolute(flags.handoff_file)
+      ? flags.handoff_file
+      : path.resolve(repoRoot, String(flags.handoff_file));
+  }
+
+  return path.join(repoRoot, '.skill-cassette', 'handoff.json');
+}
+
+function saveHandoffFile(filePath, handoff) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(handoff, null, 2)}\n`);
+}
+
+function buildBridgeCommand(repoRoot, handoffFilePath) {
+  const relativeHandoffFile = path.relative(repoRoot, handoffFilePath) || handoffFilePath;
+  return `node examples/wrappers/agent-bridge.mjs --handoff-file ${JSON.stringify(relativeHandoffFile)}`;
+}
+
+function buildInitGuide({ repoRoot, handoffFilePath, doctorReport, scanReport, backendSelection }) {
+  const modelSegment = backendSelection.model
+    ? `--model ${backendSelection.model} `
+    : backendSelection.resolved === 'ollama'
+      ? '--model <name> '
+      : '';
+  const lines = [];
+
+  lines.push('skill-cassette init');
+  lines.push(`repo: ${repoRoot}`);
+  lines.push('');
+  lines.push('health:');
+  for (const check of doctorReport.checks) {
+    lines.push(`- ${check.ok ? 'ok' : 'warn'} ${check.label}${check.detail ? ` - ${check.detail}` : ''}`);
+  }
+
+  if (doctorReport.warnings?.length) {
+    lines.push('warnings:');
+    for (const warning of doctorReport.warnings) {
+      lines.push(`- ${warning}`);
+    }
+  }
+
+  lines.push('');
+  lines.push('discovery:');
+  lines.push(`- skills: ${scanReport.skills.length}`);
+  lines.push(`- memory: ${scanReport.memory.length}`);
+
+  if (scanReport.issues?.length) {
+    lines.push('discovery issues:');
+    for (const issue of scanReport.issues) {
+      lines.push(`- ${issue}`);
+    }
+  }
+
+  lines.push('');
+  lines.push('next:');
+  lines.push(`1. ctx handoff --backend ${backendSelection.resolved} ${modelSegment}--json`);
+  lines.push(`2. ${buildBridgeCommand(repoRoot, handoffFilePath)}`);
+  lines.push('');
+  lines.push(`saved handoff file: ${path.relative(repoRoot, handoffFilePath)}`);
+
+  return `${lines.join('\n').trim()}\n`;
+}
+
 function jsonOutput(stdout, data) {
   stdout.write(`${JSON.stringify(data, null, 2)}\n`);
 }
@@ -313,6 +379,46 @@ async function runInit(flags, io = {}) {
     }
   }
 
+  const doctorCapture = [];
+  const scanCapture = [];
+  const captureWriter = (target) => ({
+    write(chunk) {
+      target.push(String(chunk));
+    }
+  });
+
+  await runDoctor({ ...flags, json: true }, captureWriter(doctorCapture));
+  await runScan({ ...flags, json: true }, captureWriter(scanCapture));
+
+  let doctorReport = { checks: [], warnings: [] };
+  let scanReport = { skills: [], memory: [], issues: [] };
+
+  try {
+    doctorReport = JSON.parse(doctorCapture.join(''));
+  } catch {
+    // Keep the concise guide alive even if a downstream formatter changes.
+  }
+
+  try {
+    scanReport = JSON.parse(scanCapture.join(''));
+  } catch {
+    // Keep the concise guide alive even if a downstream formatter changes.
+  }
+
+  const config = loadConfig(workingDir);
+  const backendSelection = resolveBackendSelection(config.backend?.default, config, {
+    model: config.backend?.model
+  });
+  const handoffFilePath = resolveHandoffFilePath(workingDir, flags);
+
+  stdout.write('\n');
+  stdout.write(buildInitGuide({
+    repoRoot: workingDir,
+    handoffFilePath,
+    doctorReport,
+    scanReport,
+    backendSelection
+  }));
 }
 
 async function runScan(flags, stdout) {
@@ -436,13 +542,26 @@ async function runHandoff(flags, stdout) {
     model: flags.model
   });
   const handoff = buildBackendEnvelope(state.bundle, selection, state.config);
+  const handoffFilePath = resolveHandoffFilePath(state.repoRoot, flags);
+  const handoffForDisk = {
+    ...handoff,
+    handoff_file: path.relative(state.repoRoot, handoffFilePath) || path.basename(handoffFilePath),
+    execution: {
+      ...handoff.execution,
+      saved_handoff_file: path.relative(state.repoRoot, handoffFilePath) || path.basename(handoffFilePath)
+    }
+  };
+
+  saveHandoffFile(handoffFilePath, handoffForDisk);
 
   if (flags.json) {
-    jsonOutput(stdout, handoff);
+    jsonOutput(stdout, handoffForDisk);
     return;
   }
 
-  stdout.write(renderBackendBundle(handoff));
+  stdout.write(renderBackendBundle(handoffForDisk));
+  stdout.write(`\nsaved handoff file: ${path.relative(state.repoRoot, handoffFilePath)}\n`);
+  stdout.write(`bridge command: ${buildBridgeCommand(state.repoRoot, handoffFilePath)}\n`);
 }
 
 async function main(argv = process.argv.slice(2), io = {}) {

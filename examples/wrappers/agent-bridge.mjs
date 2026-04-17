@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -90,15 +91,26 @@ function buildCtxArgs(flags) {
   return args;
 }
 
+function resolveHandoffFilePath(flags) {
+  const input = String(flags.handoff_file || '.skill-cassette/handoff.json');
+
+  if (path.isAbsolute(input)) {
+    return input;
+  }
+
+  return path.resolve(flags.cwd || process.cwd(), input);
+}
+
 function printUsage() {
   process.stdout.write([
     'agent-bridge.mjs',
     '',
     'Usage:',
-    '  node examples/wrappers/agent-bridge.mjs [--backend ollama] [--model llama3] [--task <text>] [--issue-file <file>] [--from-git] [--cwd <dir>] [--ctx-bin <cmd>] [--dry-run]',
+    '  node examples/wrappers/agent-bridge.mjs [--handoff-file <file>] [--backend ollama] [--model llama3] [--task <text>] [--issue-file <file>] [--from-git] [--cwd <dir>] [--ctx-bin <cmd>] [--dry-run]',
     '',
     'Notes:',
     '  - Install or link skill-cassette so the ctx command is available.',
+    '  - Use --handoff-file to reuse an editable saved JSON context.',
     '  - Ollama executes directly when skill-cassette produces execution.command.',
     '  - Claude and Codex return messages for your SDK wrapper.'
   ].join('\n'));
@@ -155,29 +167,34 @@ function main() {
     return;
   }
 
-  const ctxBin = resolveCtxBin(flags);
-  const ctxArgs = buildCtxArgs(flags);
-  const result = runCommand(ctxBin, ctxArgs, {
-    cwd: flags.cwd ? path.resolve(flags.cwd) : process.cwd(),
-    encoding: 'utf8'
-  });
-
-  if (result.error) {
-    process.stderr.write(String(result.error.message) + '\n');
-    process.exitCode = 1;
-    return;
-  }
-
-  if (typeof result.status === 'number' && result.status !== 0) {
-    process.stderr.write(String(result.stderr || 'ctx handoff failed.\n'));
-    process.exitCode = result.status;
-    return;
-  }
-
   let handoff;
 
   try {
-    handoff = JSON.parse(result.stdout);
+    if (flags.handoff_file) {
+      const handoffFilePath = resolveHandoffFilePath(flags);
+      handoff = JSON.parse(fs.readFileSync(handoffFilePath, 'utf8'));
+    } else {
+      const ctxBin = resolveCtxBin(flags);
+      const ctxArgs = buildCtxArgs(flags);
+      const result = runCommand(ctxBin, ctxArgs, {
+        cwd: flags.cwd ? path.resolve(flags.cwd) : process.cwd(),
+        encoding: 'utf8'
+      });
+
+      if (result.error) {
+        process.stderr.write(String(result.error.message) + '\n');
+        process.exitCode = 1;
+        return;
+      }
+
+      if (typeof result.status === 'number' && result.status !== 0) {
+        process.stderr.write(String(result.stderr || 'ctx handoff failed.\n'));
+        process.exitCode = result.status;
+        return;
+      }
+
+      handoff = JSON.parse(result.stdout);
+    }
   } catch (error) {
     process.stderr.write('Unable to parse ctx handoff JSON: ' + error.message + '\n');
     process.exitCode = 1;
