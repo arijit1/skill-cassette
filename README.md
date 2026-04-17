@@ -20,16 +20,13 @@ It ships with:
 Start here if you want the fastest path from a fresh repo to a workspace-local handoff:
 
 1. Initialize the repo-local scaffold.
-2. Generate a saved handoff file for your backend.
-3. Edit `.skill-cassette/handoff.json` if you want to inspect or tweak the payload.
-4. Run the backend command printed by `ctx handoff`.
-5. When `ctx init` asks, you can also let it generate the handoff immediately.
+2. Let `ctx init` generate and launch Codex automatically when it asks.
+3. Edit `.skill-cassette/handoff.json` only if you want to review the saved payload first.
+4. If you skip the prompt, run `ctx handoff --backend codex --json` and then answer yes at the prompt.
 
 ```bash
 ctx init
 ctx handoff --backend codex --json
-code .skill-cassette/handoff.json
-node -e "const fs=require('node:fs');process.stdout.write(JSON.parse(fs.readFileSync('.skill-cassette/handoff.json','utf8')).execution.prompt_text)" | codex exec --cd . --full-auto -
 ```
 
 If you want the `ctx` command in your shell while developing locally:
@@ -109,25 +106,19 @@ Use the handoff command when you want the prompt shaped for a specific backend:
 node bin/ctx.js handoff --backend claude --json
 ```
 
-`ctx handoff --backend codex --json` also writes an editable handoff file at `.skill-cassette/handoff.json` by default. That file is what the backend command reads when you want to review or tweak the context before execution.
+`ctx handoff --backend codex --json` also writes an editable handoff file at `.skill-cassette/handoff.json` by default. That file is what Codex uses when you want to review or tweak the context before execution.
 
-After handoff generation, the CLI prints the backend command to run in your repo. bridge helper is optional/internal sample code; use it only if you want a reference wrapper in your own repo.
+After handoff generation, the CLI tells you that Codex will launch automatically. The bridge helper is optional/internal sample code; use it only if you want a reference wrapper in your own repo.
 
 ## Optional Bridge
 
 `ctx init` creates `.skill-cassette/agent-bridge.mjs` in your workspace. That is optional/internal sample code, not the primary path.
 
+If you want to inspect it locally, run `ctx init` after linking the CLI:
+
 ```bash
 npm link
-node -e "const fs=require('node:fs');process.stdout.write(JSON.parse(fs.readFileSync('.skill-cassette/handoff.json','utf8')).execution.prompt_text)" | codex exec --cd . --full-auto -
-```
-
-bridge helper is optional/internal sample code; use it only if you want a reference wrapper in your own repo.
-
-If you want to reuse the saved handoff file directly:
-
-```bash
-node -e "const fs=require('node:fs');process.stdout.write(JSON.parse(fs.readFileSync('.skill-cassette/handoff.json','utf8')).execution.prompt_text)" | codex exec --cd . --full-auto -
+ctx init
 ```
 
 ## Example skill set

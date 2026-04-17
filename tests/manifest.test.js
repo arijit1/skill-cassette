@@ -73,9 +73,8 @@ test('instruction files are present and non-empty', () => {
 test('README makes the workspace runner obvious and keeps the repo sample secondary', () => {
   const readme = readText('README.md');
 
-  assert.match(readme, /backend command/i);
+  assert.match(readme, /Codex will launch automatically/i);
   assert.match(readme, /bridge helper is optional\/internal sample code/i);
-  assert.match(readme, /codex exec --cd/i);
   assert.match(readme, /Quickstart/i);
 });
 

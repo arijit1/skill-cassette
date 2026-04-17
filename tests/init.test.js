@@ -73,7 +73,7 @@ test('ctx init runs guided discovery and suggests the next handoff step', () => 
     assert.match(result.stdout, /discovery:/i);
     assert.match(result.stdout, /next:/i);
     assert.match(result.stdout, /ctx handoff --backend codex --json/i);
-    assert.match(result.stdout, /backend command: .*codex exec --cd .* --full-auto/i);
+    assert.match(result.stdout, /answer yes at the prompt to launch Codex automatically/i);
     assert.match(result.stdout, /saved handoff file/i);
     assert.ok(fs.existsSync(path.join(tempRoot, '.skill-cassette', 'agent-bridge.mjs')));
   });
@@ -86,6 +86,7 @@ test('ctx init can generate the handoff immediately when the user confirms', asy
     const stderr = new PassThrough();
     stdin.isTTY = true;
     stdout.isTTY = true;
+    const calls = [];
 
     let stdoutText = '';
     let stderrText = '';
@@ -96,7 +97,15 @@ test('ctx init can generate the handoff immediately when the user confirms', asy
       stderrText += String(chunk);
     });
 
-    const runPromise = runInit({ cwd: tempRoot }, { stdin, stdout, stderr });
+    const runPromise = runInit({ cwd: tempRoot }, {
+      stdin,
+      stdout,
+      stderr,
+      runner: (program, args, options) => {
+        calls.push({ program, args, options });
+        return { status: 0 };
+      }
+    });
 
     process.nextTick(() => {
       stdin.write('y\n');
@@ -108,9 +117,12 @@ test('ctx init can generate the handoff immediately when the user confirms', asy
     const handoffPath = path.join(tempRoot, '.skill-cassette', 'handoff.json');
 
     assert.ok(fs.existsSync(handoffPath), 'expected init to generate a saved handoff file');
-    assert.match(stdoutText, /Generate the handoff now with Codex\?/i);
+    assert.match(stdoutText, /Generate and launch Codex now from the saved handoff\?/i);
     assert.match(stdoutText, /ctx handoff --backend codex --json/i);
-    assert.match(stderrText, /Next step: run this backend command in your workspace/i);
-    assert.match(stderrText, /backend command: .*codex exec --cd .* --full-auto/i);
+    assert.match(stderrText, /Launching Codex from the saved handoff file/i);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].program, 'codex');
+    assert.match(calls[0].args.join(' '), /exec --cd .* --full-auto -/i);
+    assert.ok(String(calls[0].options.input || '').length > 0);
   });
 });

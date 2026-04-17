@@ -72,8 +72,8 @@ cliTest('ctx handoff --json returns a backend-specific envelope', () => {
   assert.ok(Array.isArray(payload.execution.messages));
   assert.equal(payload.execution.messages[0].role, 'system');
   assert.ok(typeof payload.handoff_file === 'string');
-  assert.match(result.stderr, /Next step: run this backend command in your workspace/i);
-  assert.match(result.stderr, /backend command: .*codex exec --cd .* --full-auto/i);
+  assert.match(result.stderr, /Next step: this handoff can launch Codex automatically/i);
+  assert.match(result.stderr, /backend command: ctx init and answer yes when prompted to launch Codex/i);
   assert.match(result.stderr, /saved handoff file:/i);
   assert.match(result.stderr, /bridge helper is optional\/internal sample code/i);
 });

@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { spawnSync } = require('child_process');
 const readline = require('readline');
 const path = require('path');
 const { discoverRegistry } = require('./registry');
@@ -73,6 +74,38 @@ function parseArgs(argv) {
   };
 }
 
+function supportsColor(stream) {
+  return Boolean(stream && stream.isTTY && !process.env.NO_COLOR);
+}
+
+function blue(text, stream = process.stdout) {
+  if (!supportsColor(stream)) {
+    return text;
+  }
+
+  return `\u001b[34m${text}\u001b[39m`;
+}
+
+function runCommand(program, args, options = {}) {
+  if (program.endsWith('.js') || program.endsWith('.mjs')) {
+    return spawnSync(process.execPath, [program, ...args], options);
+  }
+
+  return spawnSync(program, args, options);
+}
+
+function supportsColor(stream) {
+  return Boolean(stream && stream.isTTY && !process.env.NO_COLOR);
+}
+
+function blue(text, stream = process.stdout) {
+  if (!supportsColor(stream)) {
+    return text;
+  }
+
+  return `\u001b[34m${text}\u001b[39m`;
+}
+
 function printUsage(stdout) {
   stdout.write([
     'skill-cassette',
@@ -140,8 +173,8 @@ function askInitChoice(stdin, stdout, workingDir) {
     const rl = createPrompt(stdin, stdout);
     const prompt = [
       `A scaffold already exists in ${workingDir}.`,
-      'Choose: [r]efresh and recreate scaffold, [c]ontinue with existing',
-      '> '
+      blue('Choose: [r]efresh and recreate scaffold, [c]ontinue with existing', stdout),
+      blue('> ', stdout)
     ].join('\n');
 
     rl.question(prompt, (answer) => {
@@ -154,11 +187,36 @@ function askInitChoice(stdin, stdout, workingDir) {
 function askYesNoChoice(stdin, stdout, question) {
   return new Promise((resolve) => {
     const rl = createPrompt(stdin, stdout);
-    rl.question(`${question} [y/N] `, (answer) => {
+    rl.question(blue(`${question} [y/N] `, stdout), (answer) => {
       rl.close();
       resolve(String(answer || '').trim().toLowerCase().startsWith('y'));
     });
   });
+}
+
+function createHandoffArtifacts(flags) {
+  const state = buildPreflightState(flags);
+  const selection = resolveBackendSelection(flags.backend, state.config, {
+    model: flags.model
+  });
+  const handoff = buildBackendEnvelope(state.bundle, selection, state.config);
+  const handoffFilePath = resolveHandoffFilePath(state.repoRoot, flags);
+  const handoffForDisk = {
+    ...handoff,
+    handoff_file: path.relative(state.repoRoot, handoffFilePath) || path.basename(handoffFilePath),
+    execution: {
+      ...handoff.execution,
+      saved_handoff_file: path.relative(state.repoRoot, handoffFilePath) || path.basename(handoffFilePath)
+    }
+  };
+
+  return {
+    state,
+    selection,
+    handoffFilePath,
+    handoff,
+    handoffForDisk
+  };
 }
 
 function resolveWorkingDir(flags) {
@@ -282,41 +340,13 @@ function saveHandoffFile(filePath, handoff) {
   fs.writeFileSync(filePath, `${JSON.stringify(handoff, null, 2)}\n`);
 }
 
-function buildCodexExecCommand(repoRoot, handoffFilePath, model = null) {
-  const relativeHandoffFile = path.relative(repoRoot, handoffFilePath) || handoffFilePath;
-  const quotedHandoffFile = JSON.stringify(relativeHandoffFile);
-  const quotedModel = model ? ` -m ${JSON.stringify(model)}` : '';
-  const promptReader = `node -e "const fs=require('node:fs');const handoff=JSON.parse(fs.readFileSync(${quotedHandoffFile},'utf8'));process.stdout.write(handoff.execution?.prompt_text || '')"`;
-
-  return `${promptReader} | codex exec --cd . --full-auto${quotedModel} -`;
-}
-
-function buildBackendCommand(repoRoot, handoffFilePath, backendId = 'codex', model = null) {
-  const relativeHandoffFile = path.relative(repoRoot, handoffFilePath) || handoffFilePath;
-  const quotedHandoffFile = JSON.stringify(relativeHandoffFile);
-
-  if (backendId === 'codex') {
-    return buildCodexExecCommand(repoRoot, handoffFilePath, model);
-  }
-
-  if (backendId === 'claude') {
-    return `node .skill-cassette/agent-bridge.mjs --backend claude --handoff-file ${quotedHandoffFile}`;
-  }
-
-  if (backendId === 'ollama') {
-    return `node .skill-cassette/agent-bridge.mjs --backend ollama --handoff-file ${quotedHandoffFile}`;
-  }
-
-  return `node .skill-cassette/agent-bridge.mjs --handoff-file ${quotedHandoffFile}`;
-}
-
-function printHandoffNextStep(stream, repoRoot, handoffFilePath, backendId = 'codex', model = null) {
+function printHandoffNextStep(stream, repoRoot, handoffFilePath) {
   const relativeHandoffFile = path.relative(repoRoot, handoffFilePath) || handoffFilePath;
 
-  stream.write('Next step: run this backend command in your workspace:\n');
-  stream.write(`backend command: ${buildBackendCommand(repoRoot, handoffFilePath, backendId, model)}\n`);
-  stream.write(`saved handoff file: ${relativeHandoffFile}\n`);
-  stream.write('bridge helper is optional/internal sample code; use it only if you want a reference wrapper in your own repo.\n');
+  stream.write(`${blue('Next step: this handoff can launch Codex automatically.', stream)}\n`);
+  stream.write(`${blue('backend command: ctx init and answer yes when prompted to launch Codex.', stream)}\n`);
+  stream.write(`${blue(`saved handoff file: ${relativeHandoffFile}`, stream)}\n`);
+  stream.write(`${blue('bridge helper is optional/internal sample code; use it only if you want a reference wrapper in your own repo.', stream)}\n`);
 }
 
 function buildInitGuide({ repoRoot, handoffFilePath, doctorReport, scanReport, backendSelection }) {
@@ -352,12 +382,11 @@ function buildInitGuide({ repoRoot, handoffFilePath, doctorReport, scanReport, b
 
   lines.push('');
   lines.push('next:');
-  lines.push(`1. ctx handoff --backend ${backendId} --json`);
-  lines.push('2. edit .skill-cassette/handoff.json if you want to review it');
-  lines.push(`3. backend command: ${buildBackendCommand(repoRoot, handoffFilePath, backendId, backendSelection?.model || null)}`);
-  lines.push('4. ctx init can generate the handoff now if you confirm at the prompt.');
+  lines.push(blue(`1. ctx handoff --backend ${backendId} --json`, process.stdout));
+  lines.push(blue('2. optionally edit .skill-cassette/handoff.json', process.stdout));
+  lines.push(blue('3. answer yes at the prompt to launch Codex automatically.', process.stdout));
   lines.push('');
-  lines.push(`saved handoff file: ${path.relative(repoRoot, handoffFilePath)}`);
+  lines.push(blue(`saved handoff file: ${path.relative(repoRoot, handoffFilePath)}`, process.stdout));
 
   return `${lines.join('\n').trim()}\n`;
 }
@@ -367,9 +396,9 @@ function jsonOutput(stdout, data) {
 }
 
 function humanDoctor(stdout, checks) {
-  stdout.write('skill-cassette doctor\n');
+  stdout.write(`${blue('skill-cassette doctor', stdout)}\n`);
   for (const check of checks) {
-    stdout.write(`- ${check.ok ? 'ok' : 'warn'}: ${check.label}${check.detail ? ` - ${check.detail}` : ''}\n`);
+    stdout.write(`${blue(`- ${check.ok ? 'ok' : 'warn'}: ${check.label}${check.detail ? ` - ${check.detail}` : ''}`, stdout)}\n`);
   }
 }
 
@@ -377,6 +406,7 @@ async function runInit(flags, io = {}) {
   const stdout = io.stdout || process.stdout;
   const stdin = io.stdin || process.stdin;
   const stderr = io.stderr || process.stderr;
+  const runner = io.runner || runCommand;
   const workingDir = resolveWorkingDir(flags);
   const includeGithubAction = flags.include_github_action !== false;
   const scaffoldExists = hasExistingScaffold(workingDir, { includeGithubAction });
@@ -399,24 +429,24 @@ async function runInit(flags, io = {}) {
   });
 
   if (overwriteExisting) {
-    stdout.write(`refreshed skill-cassette scaffold in ${workingDir}\n`);
+    stdout.write(`${blue(`refreshed skill-cassette scaffold in ${workingDir}`, stdout)}\n`);
   } else if (scaffoldExists) {
-    stdout.write(`continued with existing skill-cassette scaffold in ${workingDir}\n`);
+    stdout.write(`${blue(`continued with existing skill-cassette scaffold in ${workingDir}`, stdout)}\n`);
   } else {
-    stdout.write(`initialized skill-cassette scaffold in ${workingDir}\n`);
+    stdout.write(`${blue(`initialized skill-cassette scaffold in ${workingDir}`, stdout)}\n`);
   }
 
   if (result.created.length) {
-    stdout.write('created:\n');
+    stdout.write(`${blue('created:', stdout)}\n`);
     for (const filePath of result.created) {
-      stdout.write(`- ${path.relative(workingDir, filePath)}\n`);
+      stdout.write(`${blue(`- ${path.relative(workingDir, filePath)}`, stdout)}\n`);
     }
   }
 
   if (result.refreshed.length) {
-    stdout.write('refreshed:\n');
+    stdout.write(`${blue('refreshed:', stdout)}\n`);
     for (const filePath of result.refreshed) {
-      stdout.write(`- ${path.relative(workingDir, filePath)}\n`);
+      stdout.write(`${blue(`- ${path.relative(workingDir, filePath)}`, stdout)}\n`);
     }
   }
 
@@ -466,12 +496,12 @@ async function runInit(flags, io = {}) {
     const shouldGenerateHandoff = await askYesNoChoice(
       stdin,
       stdout,
-      'Generate the handoff now with Codex?'
+      'Generate and launch Codex now from the saved handoff?'
     );
 
     if (shouldGenerateHandoff) {
       stdout.write('\n');
-      await runHandoff({ ...flags, backend: backendId, json: true }, stdout, { stderr });
+      await runHandoff({ ...flags, backend: backendId, execute: true }, stdout, { stderr, runner });
     }
   }
 }
@@ -493,21 +523,21 @@ async function runScan(flags, stdout) {
     return;
   }
 
-  stdout.write('skill-cassette scan\n');
-  stdout.write(`repo: ${repoRoot}\n`);
-  stdout.write('\nskills:\n');
+  stdout.write(`${blue('skill-cassette scan', stdout)}\n`);
+  stdout.write(`${blue(`repo: ${repoRoot}`, stdout)}\n`);
+  stdout.write(`\n${blue('skills:', stdout)}\n`);
   for (const skill of registry.skills) {
-    stdout.write(`- ${skill.valid === false ? 'warn' : 'ok'} ${skill.id || skill.relativePath} (${skill.relativePath})\n`);
+    stdout.write(`${blue(`- ${skill.valid === false ? 'warn' : 'ok'} ${skill.id || skill.relativePath} (${skill.relativePath})`, stdout)}\n`);
   }
-  stdout.write('\nmemory:\n');
+  stdout.write(`\n${blue('memory:', stdout)}\n`);
   for (const card of registry.memory) {
-    stdout.write(`- ${card.valid === false ? 'warn' : 'ok'} ${card.id || card.relativePath} (${card.relativePath})\n`);
+    stdout.write(`${blue(`- ${card.valid === false ? 'warn' : 'ok'} ${card.id || card.relativePath} (${card.relativePath})`, stdout)}\n`);
   }
 
   if (issues.length) {
-    stdout.write('\nissues:\n');
+    stdout.write(`\n${blue('issues:', stdout)}\n`);
     for (const issue of issues) {
-      stdout.write(`- ${issue}\n`);
+      stdout.write(`${blue(`- ${issue}`, stdout)}\n`);
     }
   }
 }
@@ -593,33 +623,54 @@ async function runExplain(flags, stdout) {
 
 async function runHandoff(flags, stdout, io = {}) {
   const stderr = io.stderr || process.stderr;
-  const state = buildPreflightState(flags);
-  const selection = resolveBackendSelection(flags.backend, state.config, {
-    model: flags.model
-  });
-  const handoff = buildBackendEnvelope(state.bundle, selection, state.config);
-  const handoffFilePath = resolveHandoffFilePath(state.repoRoot, flags);
-  const handoffForDisk = {
-    ...handoff,
-    handoff_file: path.relative(state.repoRoot, handoffFilePath) || path.basename(handoffFilePath),
-    execution: {
-      ...handoff.execution,
-      saved_handoff_file: path.relative(state.repoRoot, handoffFilePath) || path.basename(handoffFilePath)
-    }
-  };
+  const runner = io.runner || runCommand;
+  const {
+    state,
+    selection,
+    handoffFilePath,
+    handoffForDisk
+  } = createHandoffArtifacts(flags);
 
   saveHandoffFile(handoffFilePath, handoffForDisk);
 
+  if (flags.execute && selection.resolved === 'codex') {
+    stderr.write(`${blue('Launching Codex from the saved handoff file.', stderr)}\n`);
+    const args = ['exec', '--cd', state.repoRoot, '--full-auto'];
+
+    if (selection.model) {
+      args.push('-m', String(selection.model));
+    }
+
+    args.push('-');
+
+    const result = runner('codex', args, {
+      input: handoffForDisk.execution.prompt_text || '',
+      encoding: 'utf8',
+      stdio: ['pipe', 'inherit', 'inherit']
+    });
+
+    if (result.error) {
+      stderr.write(String(result.error.message) + '\n');
+      process.exitCode = 1;
+      return;
+    }
+
+    if (typeof result.status === 'number') {
+      process.exitCode = result.status;
+    }
+
+    return;
+  }
+
   if (flags.json) {
     jsonOutput(stdout, handoffForDisk);
-    printHandoffNextStep(stderr, state.repoRoot, handoffFilePath, selection.resolved, selection.model);
+    printHandoffNextStep(stderr, state.repoRoot, handoffFilePath);
     return;
   }
 
   stdout.write(renderBackendBundle(handoffForDisk));
-  stdout.write(`\nsaved handoff file: ${path.relative(state.repoRoot, handoffFilePath)}\n`);
-  stdout.write(`backend command: ${buildBackendCommand(state.repoRoot, handoffFilePath, selection.resolved, selection.model)}\n`);
-  stdout.write('bridge helper is optional/internal sample code; use it only if you want a reference wrapper in your own repo.\n');
+  stdout.write(`\n${blue(`saved handoff file: ${path.relative(state.repoRoot, handoffFilePath)}`, stdout)}\n`);
+  stdout.write(`${blue('Codex can launch automatically from the saved handoff file when you confirm in ctx init.', stdout)}\n`);
 }
 
 async function main(argv = process.argv.slice(2), io = {}) {
