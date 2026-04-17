@@ -71,7 +71,8 @@ test('ctx init runs guided discovery and suggests the next handoff step', () => 
     assert.match(result.stdout, /discovery:/i);
     assert.match(result.stdout, /next:/i);
     assert.match(result.stdout, /ctx handoff --backend codex --json/i);
-    assert.match(result.stdout, /agent-bridge\.mjs --backend codex --handoff-file/i);
+    assert.match(result.stdout, /\.skill-cassette\/agent-bridge\.mjs --handoff-file/i);
     assert.match(result.stdout, /saved handoff file/i);
+    assert.ok(fs.existsSync(path.join(tempRoot, '.skill-cassette', 'agent-bridge.mjs')));
   });
 });

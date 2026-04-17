@@ -272,17 +272,19 @@ function saveHandoffFile(filePath, handoff) {
   fs.writeFileSync(filePath, `${JSON.stringify(handoff, null, 2)}\n`);
 }
 
-function buildBridgeCommand(repoRoot, handoffFilePath, backendId = 'codex') {
+function buildWorkspaceRunnerCommand(repoRoot, handoffFilePath) {
   const relativeHandoffFile = path.relative(repoRoot, handoffFilePath) || handoffFilePath;
-  return `node examples/wrappers/agent-bridge.mjs --backend ${backendId} --handoff-file ${JSON.stringify(relativeHandoffFile)}`;
+  const quotedHandoffFile = JSON.stringify(relativeHandoffFile);
+  return `node .skill-cassette/agent-bridge.mjs --handoff-file ${quotedHandoffFile}`;
 }
 
-function printHandoffNextStep(stream, repoRoot, handoffFilePath, backendId = 'codex') {
+function printHandoffNextStep(stream, repoRoot, handoffFilePath) {
   const relativeHandoffFile = path.relative(repoRoot, handoffFilePath) || handoffFilePath;
-  stream.write('next step:\n');
-  stream.write(`- copy-paste this command: ${buildBridgeCommand(repoRoot, handoffFilePath, backendId)}\n`);
-  stream.write(`- saved handoff file: ${relativeHandoffFile}\n`);
-  stream.write('- bridge helper is optional/internal; it only wraps the saved handoff for execution.\n');
+
+  stream.write('Next step: run this workspace-local command in your repo:\n');
+  stream.write(`workspace runner: ${buildWorkspaceRunnerCommand(repoRoot, handoffFilePath)}\n`);
+  stream.write(`saved handoff file: ${relativeHandoffFile}\n`);
+  stream.write('repo bridge sample in examples/ is optional/internal sample code; use it only as a reference.\n');
 }
 
 function buildInitGuide({ repoRoot, handoffFilePath, doctorReport, scanReport, backendSelection }) {
@@ -319,7 +321,8 @@ function buildInitGuide({ repoRoot, handoffFilePath, doctorReport, scanReport, b
   lines.push('');
   lines.push('next:');
   lines.push(`1. ctx handoff --backend ${backendId} --json`);
-  lines.push(`2. ${buildBridgeCommand(repoRoot, handoffFilePath, backendId)}`);
+  lines.push('2. edit .skill-cassette/handoff.json');
+  lines.push(`3. ${buildWorkspaceRunnerCommand(repoRoot, handoffFilePath)}`);
   lines.push('');
   lines.push(`saved handoff file: ${path.relative(repoRoot, handoffFilePath)}`);
 
@@ -560,14 +563,14 @@ async function runHandoff(flags, stdout) {
 
   if (flags.json) {
     jsonOutput(stdout, handoffForDisk);
-    printHandoffNextStep(process.stderr, state.repoRoot, handoffFilePath, selection.resolved || 'codex');
+    printHandoffNextStep(process.stderr, state.repoRoot, handoffFilePath);
     return;
   }
 
   stdout.write(renderBackendBundle(handoffForDisk));
   stdout.write(`\nsaved handoff file: ${path.relative(state.repoRoot, handoffFilePath)}\n`);
-  stdout.write(`bridge command: ${buildBridgeCommand(state.repoRoot, handoffFilePath)}\n`);
-  stdout.write('bridge helper is optional/internal; it only wraps the saved handoff for execution.\n');
+  stdout.write(`workspace runner: ${buildWorkspaceRunnerCommand(state.repoRoot, handoffFilePath)}\n`);
+  stdout.write('repo bridge sample in examples/ is optional/internal sample code; use it only as a reference.\n');
 }
 
 async function main(argv = process.argv.slice(2), io = {}) {

@@ -158,6 +158,21 @@ function runCommand(program, args, options = {}) {
   return spawnSync(program, args, options);
 }
 
+function resolveBridgeDisplayName() {
+  const scriptPath = process.argv[1] || 'agent-bridge.mjs';
+  const relativePath = path.relative(process.cwd(), scriptPath).split(path.sep).join('/');
+
+  if (!relativePath || relativePath === '.') {
+    return 'agent-bridge.mjs';
+  }
+
+  if (relativePath.startsWith('..')) {
+    return scriptPath;
+  }
+
+  return relativePath.startsWith('.') ? relativePath : \`./\${relativePath}\`;
+}
+
 function buildCtxArgs(flags) {
   const args = ['handoff', '--json'];
 
@@ -189,11 +204,13 @@ function buildCtxArgs(flags) {
 }
 
 function printUsage() {
+  const displayName = resolveBridgeDisplayName();
+
   process.stdout.write([
     'agent-bridge.mjs',
     '',
     'Usage:',
-    '  node examples/wrappers/agent-bridge.mjs [--backend ollama] [--model llama3] [--task <text>] [--issue-file <file>] [--from-git] [--cwd <dir>] [--ctx-bin <cmd>] [--dry-run]',
+    \`  node \${displayName} [--backend ollama] [--model llama3] [--task <text>] [--issue-file <file>] [--from-git] [--cwd <dir>] [--ctx-bin <cmd>] [--dry-run]\`,
     '',
     'Notes:',
     '  - Install or link skill-cassette so the ctx command is available.',
@@ -309,7 +326,7 @@ function buildScaffoldEntries(options = {}) {
       contents: `${JSON.stringify(DEFAULT_CONFIG, null, 2)}\n`
     },
     {
-      relativePath: 'examples/wrappers/agent-bridge.mjs',
+      relativePath: '.skill-cassette/agent-bridge.mjs',
       contents: `${AGENT_BRIDGE_SCRIPT}\n`
     },
     {

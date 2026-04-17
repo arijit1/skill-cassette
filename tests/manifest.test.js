@@ -70,12 +70,13 @@ test('instruction files are present and non-empty', () => {
   assert.match(codeInstructions, /tests/i);
 });
 
-test('README makes the handoff next step obvious and keeps the bridge secondary', () => {
+test('README makes the workspace runner obvious and keeps the repo sample secondary', () => {
   const readme = readText('README.md');
 
-  assert.match(readme, /copy-pasteable next command/i);
-  assert.match(readme, /bridge helper is optional\/internal/i);
-  assert.match(readme, /Optional Bridge/i);
+  assert.match(readme, /\.skill-cassette\/agent-bridge\.mjs/i);
+  assert.match(readme, /workspace-local runner/i);
+  assert.match(readme, /bridge sample in .*examples\/wrappers\/agent-bridge\.mjs.*optional\/internal sample code/i);
+  assert.match(readme, /Workspace Runner/i);
 });
 
 test('sample backend bridge wrapper is present and documented', () => {
