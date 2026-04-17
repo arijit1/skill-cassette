@@ -277,6 +277,14 @@ function buildBridgeCommand(repoRoot, handoffFilePath, backendId = 'codex') {
   return `node examples/wrappers/agent-bridge.mjs --backend ${backendId} --handoff-file ${JSON.stringify(relativeHandoffFile)}`;
 }
 
+function printHandoffNextStep(stream, repoRoot, handoffFilePath, backendId = 'codex') {
+  const relativeHandoffFile = path.relative(repoRoot, handoffFilePath) || handoffFilePath;
+  stream.write('next step:\n');
+  stream.write(`- copy-paste this command: ${buildBridgeCommand(repoRoot, handoffFilePath, backendId)}\n`);
+  stream.write(`- saved handoff file: ${relativeHandoffFile}\n`);
+  stream.write('- bridge helper is optional/internal; it only wraps the saved handoff for execution.\n');
+}
+
 function buildInitGuide({ repoRoot, handoffFilePath, doctorReport, scanReport, backendSelection }) {
   const backendId = backendSelection?.resolved || 'codex';
   const lines = [];
@@ -552,12 +560,14 @@ async function runHandoff(flags, stdout) {
 
   if (flags.json) {
     jsonOutput(stdout, handoffForDisk);
+    printHandoffNextStep(process.stderr, state.repoRoot, handoffFilePath, selection.resolved || 'codex');
     return;
   }
 
   stdout.write(renderBackendBundle(handoffForDisk));
   stdout.write(`\nsaved handoff file: ${path.relative(state.repoRoot, handoffFilePath)}\n`);
   stdout.write(`bridge command: ${buildBridgeCommand(state.repoRoot, handoffFilePath)}\n`);
+  stdout.write('bridge helper is optional/internal; it only wraps the saved handoff for execution.\n');
 }
 
 async function main(argv = process.argv.slice(2), io = {}) {

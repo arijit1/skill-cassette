@@ -17,18 +17,18 @@ It ships with:
 
 ## Quickstart
 
-Start here if you want the fastest path from a fresh repo to a Codex-ready handoff:
+Start here if you want the fastest path from a fresh repo to a handoff that tells you the next command:
 
 1. Initialize the repo-local scaffold.
 2. Generate a saved handoff file for your backend.
-3. Review or edit the saved file.
-4. Run the bridge with that file.
+3. Read the copy-pasteable next command the CLI prints.
+4. Run that command, or edit the saved file first if you want to inspect the payload.
 
 ```bash
 ctx init
 ctx handoff --backend codex --json
 code .skill-cassette/handoff.json
-node examples/wrappers/agent-bridge.mjs --backend codex --handoff-file .skill-cassette/handoff.json
+# copy-paste the next command that ctx prints
 ```
 
 If you want the `ctx` command in your shell while developing locally:
@@ -37,7 +37,7 @@ If you want the `ctx` command in your shell while developing locally:
 npm link
 ```
 
-`ctx init` creates `skills/`, `memory/`, config, and a starter GitHub Action in another repo. It also runs a quick `doctor` and `scan`, then prints the Codex command and saved handoff path so you know exactly what to do next.
+`ctx init` creates `skills/`, `memory/`, config, and a starter GitHub Action in another repo. It also runs a quick `doctor` and `scan`, then prints the next copy-pasteable command and saved handoff path so you know exactly what to do next.
 
 Why the saved file exists: it gives you one place to inspect or tweak the handoff before a backend runs.
 
@@ -110,9 +110,11 @@ node bin/ctx.js handoff --backend claude --json
 
 `ctx handoff --backend codex --json` also writes an editable handoff file at `.skill-cassette/handoff.json` by default. That file is what the bridge example reads when you want to review or tweak the context before execution.
 
-## Sample Bridge
+After handoff generation, the CLI prints a copy-pasteable next command and the bridge helper is optional/internal.
 
-If you want one runnable example that connects `skill-cassette` to a local backend, use the bridge in `examples/wrappers/agent-bridge.mjs`.
+## Optional Bridge
+
+If you want one optional/internal example that connects `skill-cassette` to a local backend, use the bridge in `examples/wrappers/agent-bridge.mjs`.
 
 ```bash
 npm link
@@ -120,7 +122,8 @@ node examples/wrappers/agent-bridge.mjs --backend ollama --model llama3 --task "
 ```
 
 The bridge:
-- asks `ctx handoff` for the right context, or can read `--handoff-file .skill-cassette/handoff.json`
+- is optional/internal; the handoff file and the printed next command are the primary flow
+- can read `--handoff-file .skill-cassette/handoff.json` if you want to reuse the saved payload
 - runs Ollama when `execution.command` is available
 - leaves `execution.messages` in place for Claude or Codex SDK wrappers
 - if `ctx` is not on your `PATH`, set `SKILL_CASSETTE_CTX_BIN=/path/to/bin/ctx.js`

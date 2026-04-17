@@ -70,6 +70,14 @@ test('instruction files are present and non-empty', () => {
   assert.match(codeInstructions, /tests/i);
 });
 
+test('README makes the handoff next step obvious and keeps the bridge secondary', () => {
+  const readme = readText('README.md');
+
+  assert.match(readme, /copy-pasteable next command/i);
+  assert.match(readme, /bridge helper is optional\/internal/i);
+  assert.match(readme, /Optional Bridge/i);
+});
+
 test('sample backend bridge wrapper is present and documented', () => {
   const bridge = readText('examples/wrappers/agent-bridge.mjs');
 

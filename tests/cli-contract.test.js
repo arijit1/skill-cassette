@@ -72,6 +72,8 @@ cliTest('ctx handoff --json returns a backend-specific envelope', () => {
   assert.ok(Array.isArray(payload.execution.messages));
   assert.equal(payload.execution.messages[0].role, 'system');
   assert.ok(typeof payload.handoff_file === 'string');
+  assert.match(result.stderr, /copy-paste this command/i);
+  assert.match(result.stderr, /bridge helper is optional\/internal/i);
 });
 
 cliTest('ctx handoff --json writes an editable handoff file', () => {

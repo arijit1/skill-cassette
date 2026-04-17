@@ -62,7 +62,7 @@ test('ctx init --refresh rewrites the scaffold files', () => {
   });
 });
 
-test('ctx init runs guided discovery and suggests the next bridge command', () => {
+test('ctx init runs guided discovery and suggests the next handoff step', () => {
   withTempRepo((tempRoot) => {
     const result = runCtx(['init'], tempRoot);
 
