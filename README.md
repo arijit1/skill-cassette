@@ -91,6 +91,7 @@ The shipped CLI and workflow scaffold are Node-based in v0, so non-Node repos ma
 - `examples/`: demo config and task inputs
 - `examples/wrappers/`: optional/internal sample backend bridge scripts
 - `tests/`: manifest and CLI contract tests
+- `architecture.md`: contributor-facing system map and v0 boundaries
 - `.github/workflows/preflight.yml`: PR preflight scaffold
 
 ## Backend adapters
