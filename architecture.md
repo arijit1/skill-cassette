@@ -1,13 +1,13 @@
 # skill-cassette Architecture
 
-`skill-cassette` is a repo-owned handoff layer for agent-assisted work. Its job in v0 is narrow:
+`skill-cassette` is a repo-owned handoff layer for agent-assisted work. Its job in v1 is narrow:
 
 - inspect local repo signals
 - choose a small set of skills and memory cards
 - save an editable handoff artifact
 - print an explicit next step for the user or backend
 
-It is not a generic memory system, and v0 does not promise compaction or persistent memory recovery.
+It is not a generic memory system, and v1 does not promise compaction or persistent memory recovery.
 
 ## System Shape
 
@@ -80,7 +80,7 @@ This is where explainability lives, but not execution.
 
 Shapes the preflight bundle into backend-specific handoff payloads.
 
-v0 includes portable adapters for:
+v1 includes portable adapters for:
 
 - `codex`
 - `claude`
@@ -115,9 +115,9 @@ The repo owns the following artifacts:
 - `.skill-cassette/handoff.json`
 - `.skill-cassette/agent-bridge.mjs`
 
-The editable handoff file is the most important artifact for v0. It lets a user inspect or tweak the context before any backend runs.
+The editable handoff file is the most important artifact for v1. It lets a user inspect or tweak the context before any backend runs.
 
-## v0 Boundaries
+## v1 Boundaries
 
 These are intentional limits for the current release:
 
@@ -137,7 +137,7 @@ If you want to contribute safely, keep changes inside one of these lanes:
 3. Improve scaffold output without making the product depend on the scaffold.
 4. Add tests that lock the current behavior before changing user-facing text.
 
-Avoid turning v0 into a broad memory platform. The product remains a handoff layer with an editable artifact and a clear next step.
+Avoid turning v1 into a broad memory platform. The product remains a handoff layer with an editable artifact and a clear next step.
 
 ## Suggested Contribution Areas
 

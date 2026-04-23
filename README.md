@@ -2,43 +2,34 @@
 
 > Repo-owned handoff layer for agents that makes the next step obvious.
 >
-> `skill-cassette` reads task signals from the repo, the branch, and the prompt, then loads the right skill and memory before handing the bundle to Ollama, Claude, Codex, or another compatible backend.
+> `skill-cassette` reads repo signals, saves an editable handoff artifact, and turns it into a clear next step for Ollama, Claude, Codex, or another compatible backend.
 
 ## At a glance
 
-`skill-cassette` is a local-first preflight layer for AI-assisted work. It is built to keep agents from forgetting repo conventions, docs style, or code review rules.
+| Area | What it gives you |
+| --- | --- |
+| Handoff artifact | `.skill-cassette/handoff.json` stays editable and repo-owned. |
+| First-run flow | `ctx init` runs health + discovery, then asks what to do next. |
+| Primary promise | Review the saved handoff, then continue from an obvious next step. |
+| Optional sample | `.skill-cassette/agent-bridge.mjs` is kept as reference code only. |
 
-- a CLI (`ctx`)
-- repo-local skill manifests
-- repo-local memory cards
-- explainable, read-only preflight output
-- backend adapters for portable handoff payloads
-- a GitHub Action scaffold for pull requests
+`skill-cassette` is a local-first preflight layer for AI-assisted work. It keeps agents from forgetting repo conventions, docs style, or code review rules.
 
-**What users get**
-
-- A saved, editable handoff artifact at `.skill-cassette/handoff.json`
-- A direct next-step prompt instead of a vague “do the thing” handoff
-- An optional/internal bridge example for repos that want a wrapper pattern
-
-**What v0 is not**
-
-- A generic memory platform
-- Persistent compaction or memory recovery
-- A Node-shaped workflow assumption for every repo type
+> v1 is intentionally narrow: it helps you review context and continue work without turning into a generic memory platform.
 
 ## Quickstart
 
 Start here if you want the fastest path from a fresh repo to a saved handoff and a clear next-step prompt:
 
-1. Initialize the repo-local scaffold.
-2. Let `ctx init` guide scaffold refresh or continue, run `doctor` and `scan`, ask what you are working on, then ask whether to generate the handoff and show the next-step prompt.
-3. Edit `.skill-cassette/handoff.json` only if you want to review the saved payload first.
-4. If you want to generate the handoff separately, run `ctx handoff --backend codex --json` and follow the saved-file guidance it prints.
+1. Run `ctx init`.
+2. Read the health and discovery output.
+3. Open `.skill-cassette/handoff.json` if you want to inspect the saved payload.
+4. Follow the next-step prompt, or generate a handoff directly with `ctx handoff --backend codex --json`.
 
 ```bash
 ctx init
 ctx handoff --backend codex --json
+code .skill-cassette/handoff.json
 ```
 
 If you want the `ctx` command in your shell while developing locally:
@@ -47,13 +38,13 @@ If you want the `ctx` command in your shell while developing locally:
 npm link
 ```
 
-`ctx init` creates `skills/`, `memory/`, config, `.skill-cassette/agent-bridge.mjs`, and a starter GitHub Action in your repo. It also runs a quick `doctor` and `scan`, asks what you are working on, then asks whether to generate the handoff and show the next-step prompt.
+`ctx init` creates `skills/`, `memory/`, config, `.skill-cassette/agent-bridge.mjs`, and a starter GitHub Action in your repo. It also runs `doctor` and `scan`, then asks whether to generate the handoff and show the next-step prompt.
 
 Why the saved file exists: it gives you one place to inspect or tweak the handoff before a backend runs.
-Future compaction and persistent memory recovery are intentionally not part of v0; they stay as later work if the repo needs deeper state retention.
-The shipped CLI and workflow scaffold are Node-based in v0, so non-Node repos may need a custom wrapper or a retargeted workflow entrypoint instead of using the example `npm` / `node` path as-is.
+Future compaction and persistent memory recovery are intentionally not part of v1; they stay as later work if the repo needs deeper state retention.
+The shipped CLI and workflow scaffold are Node-based in v1, so non-Node repos may need a custom wrapper or a retargeted workflow entrypoint instead of using the example `npm` / `node` path as-is.
 
-## v0 scope
+## v1 scope
 
 - Local-first, read-only recommendations
 - Code and docs workflows
@@ -62,9 +53,9 @@ The shipped CLI and workflow scaffold are Node-based in v0, so non-Node repos ma
 - Backend handoff for Ollama, Claude, Codex, and generic wrappers
 - CLI commands: `init`, `scan`, `doctor`, `preflight`, `handoff`, `explain`
 - GitHub Action scaffold for PR preflight
-- No promise of generalized memory persistence or compaction in v0
+- No promise of generalized memory persistence or compaction in v1
 
-## What v0 does not do
+## What v1 does not do
 
 - Autonomous file edits by the router
 - Spreadsheet-specific routing as a first-class path
@@ -72,7 +63,7 @@ The shipped CLI and workflow scaffold are Node-based in v0, so non-Node repos ma
 - Background monitoring
 - Multi-agent orchestration
 - Direct backend execution from the router
-- Persistent memory compaction as a v0 guarantee
+- Persistent memory compaction as a v1 guarantee
 - Node-shaped workflow scaffolding for every repo type
 
 ## How it works
@@ -91,7 +82,7 @@ The shipped CLI and workflow scaffold are Node-based in v0, so non-Node repos ma
 - `examples/`: demo config and task inputs
 - `examples/wrappers/`: optional/internal sample backend bridge scripts
 - `tests/`: manifest and CLI contract tests
-- `architecture.md`: contributor-facing system map and v0 boundaries
+- `architecture.md`: contributor-facing system map and v1 boundaries
 - `.github/workflows/preflight.yml`: PR preflight scaffold
 
 ## Backend adapters

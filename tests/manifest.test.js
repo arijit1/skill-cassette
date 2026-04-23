@@ -92,7 +92,7 @@ test('sample backend bridge wrapper is present and prompts for review', () => {
   assert.match(bridge, /Press Enter when you are ready to continue with Codex/i);
 });
 
-test('demo config matches the planned v0 contract', () => {
+test('demo config matches the planned v1 contract', () => {
   const config = readJson('examples/skill-cassette.config.example.json');
 
   assert.equal(config.version, 1);

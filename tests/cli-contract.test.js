@@ -23,7 +23,7 @@ function runCtx(args) {
   });
 }
 
-cliTest('ctx --help exposes the release v0 command set', () => {
+cliTest('ctx --help exposes the release v1 command set', () => {
   const result = runCtx(['--help']);
 
   assert.equal(result.status, 0, result.stderr);
